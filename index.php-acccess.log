@@ -1,0 +1,1232 @@
+SERVER:
+Array
+(
+    [REDIRECT_SCRIPT_URL] => /auth
+    [REDIRECT_SCRIPT_URI] => https://localtest.me/auth
+    [REDIRECT_Shib-Handler] => https://localtest.me/Shibboleth.sso
+    [REDIRECT_Shib-Application-ID] => default
+    [REDIRECT_Shib-Session-ID] => _4329e2d8386fd5bfb07eed0befa380e3
+    [REDIRECT_Shib-Identity-Provider] => https://idp.localtest.me/auth/realms/hird
+    [REDIRECT_Shib-Authentication-Instant] => 2021-01-11T12:42:30.135Z
+    [REDIRECT_Shib-Authentication-Method] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-AuthnContext-Class] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-Session-Index] => b3480179-a16e-44ac-8e71-8590c4dfa05c::42b7650a-9f22-4ab7-a67b-2836cecf22e7
+    [REDIRECT_Shib-Session-Expires] => 1610397750
+    [REDIRECT_Shib-Session-Inactivity] => 1610374888
+    [REDIRECT_email] => johanvonboer@runbox.com
+    [REDIRECT_givenName] => Johan
+    [REDIRECT_sn] => von Boer
+    [REDIRECT_HTTPS] => on
+    [REDIRECT_SSL_TLS_SNI] => localtest.me
+    [REDIRECT_STATUS] => 200
+    [SCRIPT_URL] => /auth
+    [SCRIPT_URI] => https://localtest.me/auth
+    [HTTPS] => on
+    [SSL_TLS_SNI] => localtest.me
+    [HTTP_HOST] => localtest.me
+    [HTTP_CONNECTION] => keep-alive
+    [HTTP_PRAGMA] => no-cache
+    [HTTP_CACHE_CONTROL] => no-cache
+    [HTTP_UPGRADE_INSECURE_REQUESTS] => 1
+    [HTTP_USER_AGENT] => Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36
+    [HTTP_ACCEPT] => text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+    [HTTP_SEC_GPC] => 1
+    [HTTP_SEC_FETCH_SITE] => same-origin
+    [HTTP_SEC_FETCH_MODE] => navigate
+    [HTTP_SEC_FETCH_USER] => ?1
+    [HTTP_SEC_FETCH_DEST] => document
+    [HTTP_ACCEPT_ENCODING] => gzip, deflate, br
+    [HTTP_ACCEPT_LANGUAGE] => en-US,en;q=0.9
+    [HTTP_COOKIE] => _shibsession_64656661756c7468747470733a2f2f6c6f63616c746573742e6d65=_4329e2d8386fd5bfb07eed0befa380e3; PHPSESSID=2rcskv8v2ki43nf89019q86isi
+    [PATH] => /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    [SERVER_SIGNATURE] => <address>Apache/2.4.38 (Debian) Server at localtest.me Port 443</address>
+
+    [SERVER_SOFTWARE] => Apache/2.4.38 (Debian)
+    [SERVER_NAME] => localtest.me
+    [SERVER_ADDR] => 172.27.0.8
+    [SERVER_PORT] => 443
+    [REMOTE_ADDR] => 172.27.0.1
+    [DOCUMENT_ROOT] => /var/www/html
+    [REQUEST_SCHEME] => https
+    [CONTEXT_PREFIX] => 
+    [CONTEXT_DOCUMENT_ROOT] => /var/www/html
+    [SERVER_ADMIN] => support@humlab.umu.se
+    [SCRIPT_FILENAME] => /var/www/html/api/index.php
+    [REMOTE_PORT] => 33522
+    [REDIRECT_REMOTE_USER] => 
+    [REDIRECT_URL] => /auth
+    [GATEWAY_INTERFACE] => CGI/1.1
+    [SERVER_PROTOCOL] => HTTP/1.1
+    [REQUEST_METHOD] => GET
+    [QUERY_STRING] => 
+    [REQUEST_URI] => /auth
+    [SCRIPT_NAME] => /api/index.php
+    [PHP_SELF] => /api/index.php
+    [REQUEST_TIME_FLOAT] => 1610371288.952
+    [REQUEST_TIME] => 1610371288
+)
+
+
+SESSION:
+Array
+(
+    [projectName] => Humlab Speech
+    [shibSessionId] => _4329e2d8386fd5bfb07eed0befa380e3
+    [shibSessionExpires] => 1610397750
+    [shibSessionInactivity] => 1610374888
+    [shibIdentityProvider] => https://idp.localtest.me/auth/realms/hird
+    [firstName] => Johan
+    [lastName] => von Boer
+    [email] => johanvonboer@runbox.com
+    [test] => test
+    [gitlabProjects] => Array
+        (
+        )
+
+)
+
+--------
+SERVER:
+Array
+(
+    [REDIRECT_SCRIPT_URL] => /auth
+    [REDIRECT_SCRIPT_URI] => https://localtest.me/auth
+    [REDIRECT_Shib-Handler] => https://localtest.me/Shibboleth.sso
+    [REDIRECT_Shib-Application-ID] => default
+    [REDIRECT_Shib-Session-ID] => _4329e2d8386fd5bfb07eed0befa380e3
+    [REDIRECT_Shib-Identity-Provider] => https://idp.localtest.me/auth/realms/hird
+    [REDIRECT_Shib-Authentication-Instant] => 2021-01-11T12:42:30.135Z
+    [REDIRECT_Shib-Authentication-Method] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-AuthnContext-Class] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-Session-Index] => b3480179-a16e-44ac-8e71-8590c4dfa05c::42b7650a-9f22-4ab7-a67b-2836cecf22e7
+    [REDIRECT_Shib-Session-Expires] => 1610397750
+    [REDIRECT_Shib-Session-Inactivity] => 1610377156
+    [REDIRECT_email] => johanvonboer@runbox.com
+    [REDIRECT_givenName] => Johan
+    [REDIRECT_sn] => von Boer
+    [REDIRECT_HTTPS] => on
+    [REDIRECT_SSL_TLS_SNI] => localtest.me
+    [REDIRECT_STATUS] => 200
+    [SCRIPT_URL] => /auth
+    [SCRIPT_URI] => https://localtest.me/auth
+    [HTTPS] => on
+    [SSL_TLS_SNI] => localtest.me
+    [HTTP_HOST] => localtest.me
+    [HTTP_CONNECTION] => keep-alive
+    [HTTP_PRAGMA] => no-cache
+    [HTTP_CACHE_CONTROL] => no-cache
+    [HTTP_UPGRADE_INSECURE_REQUESTS] => 1
+    [HTTP_USER_AGENT] => Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36
+    [HTTP_ACCEPT] => text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+    [HTTP_SEC_GPC] => 1
+    [HTTP_SEC_FETCH_SITE] => same-origin
+    [HTTP_SEC_FETCH_MODE] => navigate
+    [HTTP_SEC_FETCH_USER] => ?1
+    [HTTP_SEC_FETCH_DEST] => document
+    [HTTP_ACCEPT_ENCODING] => gzip, deflate, br
+    [HTTP_ACCEPT_LANGUAGE] => en-US,en;q=0.9
+    [HTTP_COOKIE] => _shibsession_64656661756c7468747470733a2f2f6c6f63616c746573742e6d65=_4329e2d8386fd5bfb07eed0befa380e3; PHPSESSID=2rcskv8v2ki43nf89019q86isi
+    [PATH] => /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    [SERVER_SIGNATURE] => <address>Apache/2.4.38 (Debian) Server at localtest.me Port 443</address>
+
+    [SERVER_SOFTWARE] => Apache/2.4.38 (Debian)
+    [SERVER_NAME] => localtest.me
+    [SERVER_ADDR] => 172.27.0.8
+    [SERVER_PORT] => 443
+    [REMOTE_ADDR] => 172.27.0.1
+    [DOCUMENT_ROOT] => /var/www/html
+    [REQUEST_SCHEME] => https
+    [CONTEXT_PREFIX] => 
+    [CONTEXT_DOCUMENT_ROOT] => /var/www/html
+    [SERVER_ADMIN] => support@humlab.umu.se
+    [SCRIPT_FILENAME] => /var/www/html/api/index.php
+    [REMOTE_PORT] => 33952
+    [REDIRECT_REMOTE_USER] => 
+    [REDIRECT_URL] => /auth
+    [GATEWAY_INTERFACE] => CGI/1.1
+    [SERVER_PROTOCOL] => HTTP/1.1
+    [REQUEST_METHOD] => GET
+    [QUERY_STRING] => 
+    [REQUEST_URI] => /auth
+    [SCRIPT_NAME] => /api/index.php
+    [PHP_SELF] => /api/index.php
+    [REQUEST_TIME_FLOAT] => 1610373556.678
+    [REQUEST_TIME] => 1610373556
+)
+
+
+SESSION:
+Array
+(
+    [projectName] => Humlab Speech
+    [shibSessionId] => _4329e2d8386fd5bfb07eed0befa380e3
+    [shibSessionExpires] => 1610397750
+    [shibSessionInactivity] => 1610377156
+    [shibIdentityProvider] => https://idp.localtest.me/auth/realms/hird
+    [firstName] => Johan
+    [lastName] => von Boer
+    [email] => johanvonboer@runbox.com
+    [test] => test
+    [gitlabProjects] => Array
+        (
+        )
+
+)
+
+--------
+SERVER:
+Array
+(
+    [REDIRECT_SCRIPT_URL] => /auth
+    [REDIRECT_SCRIPT_URI] => https://localtest.me/auth
+    [REDIRECT_Shib-Handler] => https://localtest.me/Shibboleth.sso
+    [REDIRECT_Shib-Application-ID] => default
+    [REDIRECT_Shib-Session-ID] => _4329e2d8386fd5bfb07eed0befa380e3
+    [REDIRECT_Shib-Identity-Provider] => https://idp.localtest.me/auth/realms/hird
+    [REDIRECT_Shib-Authentication-Instant] => 2021-01-11T12:42:30.135Z
+    [REDIRECT_Shib-Authentication-Method] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-AuthnContext-Class] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-Session-Index] => b3480179-a16e-44ac-8e71-8590c4dfa05c::42b7650a-9f22-4ab7-a67b-2836cecf22e7
+    [REDIRECT_Shib-Session-Expires] => 1610397750
+    [REDIRECT_Shib-Session-Inactivity] => 1610377195
+    [REDIRECT_email] => johanvonboer@runbox.com
+    [REDIRECT_givenName] => Johan
+    [REDIRECT_sn] => von Boer
+    [REDIRECT_HTTPS] => on
+    [REDIRECT_SSL_TLS_SNI] => localtest.me
+    [REDIRECT_STATUS] => 200
+    [SCRIPT_URL] => /auth
+    [SCRIPT_URI] => https://localtest.me/auth
+    [HTTPS] => on
+    [SSL_TLS_SNI] => localtest.me
+    [HTTP_HOST] => localtest.me
+    [HTTP_CONNECTION] => keep-alive
+    [HTTP_PRAGMA] => no-cache
+    [HTTP_CACHE_CONTROL] => no-cache
+    [HTTP_UPGRADE_INSECURE_REQUESTS] => 1
+    [HTTP_USER_AGENT] => Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36
+    [HTTP_ACCEPT] => text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+    [HTTP_SEC_GPC] => 1
+    [HTTP_SEC_FETCH_SITE] => same-origin
+    [HTTP_SEC_FETCH_MODE] => navigate
+    [HTTP_SEC_FETCH_USER] => ?1
+    [HTTP_SEC_FETCH_DEST] => document
+    [HTTP_ACCEPT_ENCODING] => gzip, deflate, br
+    [HTTP_ACCEPT_LANGUAGE] => en-US,en;q=0.9
+    [HTTP_COOKIE] => _shibsession_64656661756c7468747470733a2f2f6c6f63616c746573742e6d65=_4329e2d8386fd5bfb07eed0befa380e3; PHPSESSID=2rcskv8v2ki43nf89019q86isi
+    [PATH] => /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    [SERVER_SIGNATURE] => <address>Apache/2.4.38 (Debian) Server at localtest.me Port 443</address>
+
+    [SERVER_SOFTWARE] => Apache/2.4.38 (Debian)
+    [SERVER_NAME] => localtest.me
+    [SERVER_ADDR] => 172.27.0.8
+    [SERVER_PORT] => 443
+    [REMOTE_ADDR] => 172.27.0.1
+    [DOCUMENT_ROOT] => /var/www/html
+    [REQUEST_SCHEME] => https
+    [CONTEXT_PREFIX] => 
+    [CONTEXT_DOCUMENT_ROOT] => /var/www/html
+    [SERVER_ADMIN] => support@humlab.umu.se
+    [SCRIPT_FILENAME] => /var/www/html/api/index.php
+    [REMOTE_PORT] => 33990
+    [REDIRECT_REMOTE_USER] => 
+    [REDIRECT_URL] => /auth
+    [GATEWAY_INTERFACE] => CGI/1.1
+    [SERVER_PROTOCOL] => HTTP/1.1
+    [REQUEST_METHOD] => GET
+    [QUERY_STRING] => 
+    [REQUEST_URI] => /auth
+    [SCRIPT_NAME] => /api/index.php
+    [PHP_SELF] => /api/index.php
+    [REQUEST_TIME_FLOAT] => 1610373595.533
+    [REQUEST_TIME] => 1610373595
+)
+
+
+SESSION:
+Array
+(
+    [projectName] => Humlab Speech
+    [shibSessionId] => _4329e2d8386fd5bfb07eed0befa380e3
+    [shibSessionExpires] => 1610397750
+    [shibSessionInactivity] => 1610377195
+    [shibIdentityProvider] => https://idp.localtest.me/auth/realms/hird
+    [firstName] => Johan
+    [lastName] => von Boer
+    [email] => johanvonboer@runbox.com
+    [test] => test
+    [gitlabProjects] => Array
+        (
+        )
+
+)
+
+--------
+SERVER:
+Array
+(
+    [REDIRECT_SCRIPT_URL] => /auth
+    [REDIRECT_SCRIPT_URI] => https://localtest.me/auth
+    [REDIRECT_Shib-Handler] => https://localtest.me/Shibboleth.sso
+    [REDIRECT_Shib-Application-ID] => default
+    [REDIRECT_Shib-Session-ID] => _4329e2d8386fd5bfb07eed0befa380e3
+    [REDIRECT_Shib-Identity-Provider] => https://idp.localtest.me/auth/realms/hird
+    [REDIRECT_Shib-Authentication-Instant] => 2021-01-11T12:42:30.135Z
+    [REDIRECT_Shib-Authentication-Method] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-AuthnContext-Class] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-Session-Index] => b3480179-a16e-44ac-8e71-8590c4dfa05c::42b7650a-9f22-4ab7-a67b-2836cecf22e7
+    [REDIRECT_Shib-Session-Expires] => 1610397750
+    [REDIRECT_Shib-Session-Inactivity] => 1610377214
+    [REDIRECT_email] => johanvonboer@runbox.com
+    [REDIRECT_givenName] => Johan
+    [REDIRECT_sn] => von Boer
+    [REDIRECT_HTTPS] => on
+    [REDIRECT_SSL_TLS_SNI] => localtest.me
+    [REDIRECT_STATUS] => 200
+    [SCRIPT_URL] => /auth
+    [SCRIPT_URI] => https://localtest.me/auth
+    [HTTPS] => on
+    [SSL_TLS_SNI] => localtest.me
+    [HTTP_HOST] => localtest.me
+    [HTTP_CONNECTION] => keep-alive
+    [HTTP_PRAGMA] => no-cache
+    [HTTP_CACHE_CONTROL] => no-cache
+    [HTTP_UPGRADE_INSECURE_REQUESTS] => 1
+    [HTTP_USER_AGENT] => Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36
+    [HTTP_ACCEPT] => text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+    [HTTP_SEC_GPC] => 1
+    [HTTP_SEC_FETCH_SITE] => same-origin
+    [HTTP_SEC_FETCH_MODE] => navigate
+    [HTTP_SEC_FETCH_USER] => ?1
+    [HTTP_SEC_FETCH_DEST] => document
+    [HTTP_ACCEPT_ENCODING] => gzip, deflate, br
+    [HTTP_ACCEPT_LANGUAGE] => en-US,en;q=0.9
+    [HTTP_COOKIE] => _shibsession_64656661756c7468747470733a2f2f6c6f63616c746573742e6d65=_4329e2d8386fd5bfb07eed0befa380e3; PHPSESSID=2rcskv8v2ki43nf89019q86isi
+    [PATH] => /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    [SERVER_SIGNATURE] => <address>Apache/2.4.38 (Debian) Server at localtest.me Port 443</address>
+
+    [SERVER_SOFTWARE] => Apache/2.4.38 (Debian)
+    [SERVER_NAME] => localtest.me
+    [SERVER_ADDR] => 172.27.0.8
+    [SERVER_PORT] => 443
+    [REMOTE_ADDR] => 172.27.0.1
+    [DOCUMENT_ROOT] => /var/www/html
+    [REQUEST_SCHEME] => https
+    [CONTEXT_PREFIX] => 
+    [CONTEXT_DOCUMENT_ROOT] => /var/www/html
+    [SERVER_ADMIN] => support@humlab.umu.se
+    [SCRIPT_FILENAME] => /var/www/html/api/index.php
+    [REMOTE_PORT] => 34022
+    [REDIRECT_REMOTE_USER] => 
+    [REDIRECT_URL] => /auth
+    [GATEWAY_INTERFACE] => CGI/1.1
+    [SERVER_PROTOCOL] => HTTP/1.1
+    [REQUEST_METHOD] => GET
+    [QUERY_STRING] => 
+    [REQUEST_URI] => /auth
+    [SCRIPT_NAME] => /api/index.php
+    [PHP_SELF] => /api/index.php
+    [REQUEST_TIME_FLOAT] => 1610373614.97
+    [REQUEST_TIME] => 1610373614
+)
+
+
+SESSION:
+Array
+(
+    [projectName] => Humlab Speech
+    [shibSessionId] => _4329e2d8386fd5bfb07eed0befa380e3
+    [shibSessionExpires] => 1610397750
+    [shibSessionInactivity] => 1610377214
+    [shibIdentityProvider] => https://idp.localtest.me/auth/realms/hird
+    [firstName] => Johan
+    [lastName] => von Boer
+    [email] => johanvonboer@runbox.com
+    [test] => test
+    [gitlabProjects] => Array
+        (
+        )
+
+)
+
+--------
+SERVER:
+Array
+(
+    [REDIRECT_SCRIPT_URL] => /auth
+    [REDIRECT_SCRIPT_URI] => https://localtest.me/auth
+    [REDIRECT_Shib-Handler] => https://localtest.me/Shibboleth.sso
+    [REDIRECT_Shib-Application-ID] => default
+    [REDIRECT_Shib-Session-ID] => _4329e2d8386fd5bfb07eed0befa380e3
+    [REDIRECT_Shib-Identity-Provider] => https://idp.localtest.me/auth/realms/hird
+    [REDIRECT_Shib-Authentication-Instant] => 2021-01-11T12:42:30.135Z
+    [REDIRECT_Shib-Authentication-Method] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-AuthnContext-Class] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-Session-Index] => b3480179-a16e-44ac-8e71-8590c4dfa05c::42b7650a-9f22-4ab7-a67b-2836cecf22e7
+    [REDIRECT_Shib-Session-Expires] => 1610397750
+    [REDIRECT_Shib-Session-Inactivity] => 1610377289
+    [REDIRECT_email] => johanvonboer@runbox.com
+    [REDIRECT_givenName] => Johan
+    [REDIRECT_sn] => von Boer
+    [REDIRECT_HTTPS] => on
+    [REDIRECT_SSL_TLS_SNI] => localtest.me
+    [REDIRECT_STATUS] => 200
+    [SCRIPT_URL] => /auth
+    [SCRIPT_URI] => https://localtest.me/auth
+    [HTTPS] => on
+    [SSL_TLS_SNI] => localtest.me
+    [HTTP_HOST] => localtest.me
+    [HTTP_CONNECTION] => keep-alive
+    [HTTP_PRAGMA] => no-cache
+    [HTTP_CACHE_CONTROL] => no-cache
+    [HTTP_UPGRADE_INSECURE_REQUESTS] => 1
+    [HTTP_USER_AGENT] => Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36
+    [HTTP_ACCEPT] => text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+    [HTTP_SEC_GPC] => 1
+    [HTTP_SEC_FETCH_SITE] => same-origin
+    [HTTP_SEC_FETCH_MODE] => navigate
+    [HTTP_SEC_FETCH_USER] => ?1
+    [HTTP_SEC_FETCH_DEST] => document
+    [HTTP_ACCEPT_ENCODING] => gzip, deflate, br
+    [HTTP_ACCEPT_LANGUAGE] => en-US,en;q=0.9
+    [HTTP_COOKIE] => _shibsession_64656661756c7468747470733a2f2f6c6f63616c746573742e6d65=_4329e2d8386fd5bfb07eed0befa380e3; PHPSESSID=2rcskv8v2ki43nf89019q86isi
+    [PATH] => /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    [SERVER_SIGNATURE] => <address>Apache/2.4.38 (Debian) Server at localtest.me Port 443</address>
+
+    [SERVER_SOFTWARE] => Apache/2.4.38 (Debian)
+    [SERVER_NAME] => localtest.me
+    [SERVER_ADDR] => 172.27.0.8
+    [SERVER_PORT] => 443
+    [REMOTE_ADDR] => 172.27.0.1
+    [DOCUMENT_ROOT] => /var/www/html
+    [REQUEST_SCHEME] => https
+    [CONTEXT_PREFIX] => 
+    [CONTEXT_DOCUMENT_ROOT] => /var/www/html
+    [SERVER_ADMIN] => support@humlab.umu.se
+    [SCRIPT_FILENAME] => /var/www/html/api/index.php
+    [REMOTE_PORT] => 34070
+    [REDIRECT_REMOTE_USER] => 
+    [REDIRECT_URL] => /auth
+    [GATEWAY_INTERFACE] => CGI/1.1
+    [SERVER_PROTOCOL] => HTTP/1.1
+    [REQUEST_METHOD] => GET
+    [QUERY_STRING] => 
+    [REQUEST_URI] => /auth
+    [SCRIPT_NAME] => /api/index.php
+    [PHP_SELF] => /api/index.php
+    [REQUEST_TIME_FLOAT] => 1610373689.69
+    [REQUEST_TIME] => 1610373689
+)
+
+
+SESSION:
+Array
+(
+    [projectName] => Humlab Speech
+    [shibSessionId] => _4329e2d8386fd5bfb07eed0befa380e3
+    [shibSessionExpires] => 1610397750
+    [shibSessionInactivity] => 1610377289
+    [shibIdentityProvider] => https://idp.localtest.me/auth/realms/hird
+    [firstName] => Johan
+    [lastName] => von Boer
+    [email] => johanvonboer@runbox.com
+    [test] => test
+    [gitlabProjects] => Array
+        (
+        )
+
+)
+
+--------
+SERVER:
+Array
+(
+    [REDIRECT_SCRIPT_URL] => /auth
+    [REDIRECT_SCRIPT_URI] => https://localtest.me/auth
+    [REDIRECT_Shib-Handler] => https://localtest.me/Shibboleth.sso
+    [REDIRECT_Shib-Application-ID] => default
+    [REDIRECT_Shib-Session-ID] => _4329e2d8386fd5bfb07eed0befa380e3
+    [REDIRECT_Shib-Identity-Provider] => https://idp.localtest.me/auth/realms/hird
+    [REDIRECT_Shib-Authentication-Instant] => 2021-01-11T12:42:30.135Z
+    [REDIRECT_Shib-Authentication-Method] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-AuthnContext-Class] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-Session-Index] => b3480179-a16e-44ac-8e71-8590c4dfa05c::42b7650a-9f22-4ab7-a67b-2836cecf22e7
+    [REDIRECT_Shib-Session-Expires] => 1610397750
+    [REDIRECT_Shib-Session-Inactivity] => 1610377306
+    [REDIRECT_email] => johanvonboer@runbox.com
+    [REDIRECT_givenName] => Johan
+    [REDIRECT_sn] => von Boer
+    [REDIRECT_HTTPS] => on
+    [REDIRECT_SSL_TLS_SNI] => localtest.me
+    [REDIRECT_STATUS] => 200
+    [SCRIPT_URL] => /auth
+    [SCRIPT_URI] => https://localtest.me/auth
+    [HTTPS] => on
+    [SSL_TLS_SNI] => localtest.me
+    [HTTP_HOST] => localtest.me
+    [HTTP_CONNECTION] => keep-alive
+    [HTTP_PRAGMA] => no-cache
+    [HTTP_CACHE_CONTROL] => no-cache
+    [HTTP_UPGRADE_INSECURE_REQUESTS] => 1
+    [HTTP_USER_AGENT] => Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36
+    [HTTP_ACCEPT] => text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+    [HTTP_SEC_GPC] => 1
+    [HTTP_SEC_FETCH_SITE] => same-origin
+    [HTTP_SEC_FETCH_MODE] => navigate
+    [HTTP_SEC_FETCH_USER] => ?1
+    [HTTP_SEC_FETCH_DEST] => document
+    [HTTP_ACCEPT_ENCODING] => gzip, deflate, br
+    [HTTP_ACCEPT_LANGUAGE] => en-US,en;q=0.9
+    [HTTP_COOKIE] => _shibsession_64656661756c7468747470733a2f2f6c6f63616c746573742e6d65=_4329e2d8386fd5bfb07eed0befa380e3; PHPSESSID=2rcskv8v2ki43nf89019q86isi
+    [PATH] => /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    [SERVER_SIGNATURE] => <address>Apache/2.4.38 (Debian) Server at localtest.me Port 443</address>
+
+    [SERVER_SOFTWARE] => Apache/2.4.38 (Debian)
+    [SERVER_NAME] => localtest.me
+    [SERVER_ADDR] => 172.27.0.8
+    [SERVER_PORT] => 443
+    [REMOTE_ADDR] => 172.27.0.1
+    [DOCUMENT_ROOT] => /var/www/html
+    [REQUEST_SCHEME] => https
+    [CONTEXT_PREFIX] => 
+    [CONTEXT_DOCUMENT_ROOT] => /var/www/html
+    [SERVER_ADMIN] => support@humlab.umu.se
+    [SCRIPT_FILENAME] => /var/www/html/api/index.php
+    [REMOTE_PORT] => 34116
+    [REDIRECT_REMOTE_USER] => 
+    [REDIRECT_URL] => /auth
+    [GATEWAY_INTERFACE] => CGI/1.1
+    [SERVER_PROTOCOL] => HTTP/1.1
+    [REQUEST_METHOD] => GET
+    [QUERY_STRING] => 
+    [REQUEST_URI] => /auth
+    [SCRIPT_NAME] => /api/index.php
+    [PHP_SELF] => /api/index.php
+    [REQUEST_TIME_FLOAT] => 1610373706.277
+    [REQUEST_TIME] => 1610373706
+)
+
+
+SESSION:
+Array
+(
+    [projectName] => Humlab Speech
+    [shibSessionId] => _4329e2d8386fd5bfb07eed0befa380e3
+    [shibSessionExpires] => 1610397750
+    [shibSessionInactivity] => 1610377306
+    [shibIdentityProvider] => https://idp.localtest.me/auth/realms/hird
+    [firstName] => Johan
+    [lastName] => von Boer
+    [email] => johanvonboer@runbox.com
+    [test] => test
+    [gitlabProjects] => Array
+        (
+        )
+
+)
+
+--------
+SERVER:
+Array
+(
+    [REDIRECT_SCRIPT_URL] => /auth
+    [REDIRECT_SCRIPT_URI] => https://localtest.me/auth
+    [REDIRECT_Shib-Handler] => https://localtest.me/Shibboleth.sso
+    [REDIRECT_Shib-Application-ID] => default
+    [REDIRECT_Shib-Session-ID] => _4329e2d8386fd5bfb07eed0befa380e3
+    [REDIRECT_Shib-Identity-Provider] => https://idp.localtest.me/auth/realms/hird
+    [REDIRECT_Shib-Authentication-Instant] => 2021-01-11T12:42:30.135Z
+    [REDIRECT_Shib-Authentication-Method] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-AuthnContext-Class] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-Session-Index] => b3480179-a16e-44ac-8e71-8590c4dfa05c::42b7650a-9f22-4ab7-a67b-2836cecf22e7
+    [REDIRECT_Shib-Session-Expires] => 1610397750
+    [REDIRECT_Shib-Session-Inactivity] => 1610377328
+    [REDIRECT_email] => johanvonboer@runbox.com
+    [REDIRECT_givenName] => Johan
+    [REDIRECT_sn] => von Boer
+    [REDIRECT_HTTPS] => on
+    [REDIRECT_SSL_TLS_SNI] => localtest.me
+    [REDIRECT_STATUS] => 200
+    [SCRIPT_URL] => /auth
+    [SCRIPT_URI] => https://localtest.me/auth
+    [HTTPS] => on
+    [SSL_TLS_SNI] => localtest.me
+    [HTTP_HOST] => localtest.me
+    [HTTP_CONNECTION] => keep-alive
+    [HTTP_PRAGMA] => no-cache
+    [HTTP_CACHE_CONTROL] => no-cache
+    [HTTP_UPGRADE_INSECURE_REQUESTS] => 1
+    [HTTP_USER_AGENT] => Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36
+    [HTTP_ACCEPT] => text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+    [HTTP_SEC_GPC] => 1
+    [HTTP_SEC_FETCH_SITE] => same-origin
+    [HTTP_SEC_FETCH_MODE] => navigate
+    [HTTP_SEC_FETCH_USER] => ?1
+    [HTTP_SEC_FETCH_DEST] => document
+    [HTTP_ACCEPT_ENCODING] => gzip, deflate, br
+    [HTTP_ACCEPT_LANGUAGE] => en-US,en;q=0.9
+    [HTTP_COOKIE] => _shibsession_64656661756c7468747470733a2f2f6c6f63616c746573742e6d65=_4329e2d8386fd5bfb07eed0befa380e3; PHPSESSID=2rcskv8v2ki43nf89019q86isi
+    [PATH] => /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    [SERVER_SIGNATURE] => <address>Apache/2.4.38 (Debian) Server at localtest.me Port 443</address>
+
+    [SERVER_SOFTWARE] => Apache/2.4.38 (Debian)
+    [SERVER_NAME] => localtest.me
+    [SERVER_ADDR] => 172.27.0.8
+    [SERVER_PORT] => 443
+    [REMOTE_ADDR] => 172.27.0.1
+    [DOCUMENT_ROOT] => /var/www/html
+    [REQUEST_SCHEME] => https
+    [CONTEXT_PREFIX] => 
+    [CONTEXT_DOCUMENT_ROOT] => /var/www/html
+    [SERVER_ADMIN] => support@humlab.umu.se
+    [SCRIPT_FILENAME] => /var/www/html/api/index.php
+    [REMOTE_PORT] => 34158
+    [REDIRECT_REMOTE_USER] => 
+    [REDIRECT_URL] => /auth
+    [GATEWAY_INTERFACE] => CGI/1.1
+    [SERVER_PROTOCOL] => HTTP/1.1
+    [REQUEST_METHOD] => GET
+    [QUERY_STRING] => 
+    [REQUEST_URI] => /auth
+    [SCRIPT_NAME] => /api/index.php
+    [PHP_SELF] => /api/index.php
+    [REQUEST_TIME_FLOAT] => 1610373728.61
+    [REQUEST_TIME] => 1610373728
+)
+
+
+SESSION:
+Array
+(
+    [projectName] => Humlab Speech
+    [shibSessionId] => _4329e2d8386fd5bfb07eed0befa380e3
+    [shibSessionExpires] => 1610397750
+    [shibSessionInactivity] => 1610377328
+    [shibIdentityProvider] => https://idp.localtest.me/auth/realms/hird
+    [firstName] => Johan
+    [lastName] => von Boer
+    [email] => johanvonboer@runbox.com
+    [test] => test
+    [gitlabProjects] => Array
+        (
+        )
+
+)
+
+--------
+SERVER:
+Array
+(
+    [REDIRECT_SCRIPT_URL] => /auth
+    [REDIRECT_SCRIPT_URI] => https://localtest.me/auth
+    [REDIRECT_Shib-Handler] => https://localtest.me/Shibboleth.sso
+    [REDIRECT_Shib-Application-ID] => default
+    [REDIRECT_Shib-Session-ID] => _4329e2d8386fd5bfb07eed0befa380e3
+    [REDIRECT_Shib-Identity-Provider] => https://idp.localtest.me/auth/realms/hird
+    [REDIRECT_Shib-Authentication-Instant] => 2021-01-11T12:42:30.135Z
+    [REDIRECT_Shib-Authentication-Method] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-AuthnContext-Class] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-Session-Index] => b3480179-a16e-44ac-8e71-8590c4dfa05c::42b7650a-9f22-4ab7-a67b-2836cecf22e7
+    [REDIRECT_Shib-Session-Expires] => 1610397750
+    [REDIRECT_Shib-Session-Inactivity] => 1610377399
+    [REDIRECT_email] => johanvonboer@runbox.com
+    [REDIRECT_givenName] => Johan
+    [REDIRECT_sn] => von Boer
+    [REDIRECT_HTTPS] => on
+    [REDIRECT_SSL_TLS_SNI] => localtest.me
+    [REDIRECT_STATUS] => 200
+    [SCRIPT_URL] => /auth
+    [SCRIPT_URI] => https://localtest.me/auth
+    [HTTPS] => on
+    [SSL_TLS_SNI] => localtest.me
+    [HTTP_HOST] => localtest.me
+    [HTTP_CONNECTION] => keep-alive
+    [HTTP_PRAGMA] => no-cache
+    [HTTP_CACHE_CONTROL] => no-cache
+    [HTTP_UPGRADE_INSECURE_REQUESTS] => 1
+    [HTTP_USER_AGENT] => Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36
+    [HTTP_ACCEPT] => text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+    [HTTP_SEC_GPC] => 1
+    [HTTP_SEC_FETCH_SITE] => same-origin
+    [HTTP_SEC_FETCH_MODE] => navigate
+    [HTTP_SEC_FETCH_USER] => ?1
+    [HTTP_SEC_FETCH_DEST] => document
+    [HTTP_ACCEPT_ENCODING] => gzip, deflate, br
+    [HTTP_ACCEPT_LANGUAGE] => en-US,en;q=0.9
+    [HTTP_COOKIE] => _shibsession_64656661756c7468747470733a2f2f6c6f63616c746573742e6d65=_4329e2d8386fd5bfb07eed0befa380e3; PHPSESSID=2rcskv8v2ki43nf89019q86isi
+    [PATH] => /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    [SERVER_SIGNATURE] => <address>Apache/2.4.38 (Debian) Server at localtest.me Port 443</address>
+
+    [SERVER_SOFTWARE] => Apache/2.4.38 (Debian)
+    [SERVER_NAME] => localtest.me
+    [SERVER_ADDR] => 172.27.0.8
+    [SERVER_PORT] => 443
+    [REMOTE_ADDR] => 172.27.0.1
+    [DOCUMENT_ROOT] => /var/www/html
+    [REQUEST_SCHEME] => https
+    [CONTEXT_PREFIX] => 
+    [CONTEXT_DOCUMENT_ROOT] => /var/www/html
+    [SERVER_ADMIN] => support@humlab.umu.se
+    [SCRIPT_FILENAME] => /var/www/html/api/index.php
+    [REMOTE_PORT] => 34214
+    [REDIRECT_REMOTE_USER] => 
+    [REDIRECT_URL] => /auth
+    [GATEWAY_INTERFACE] => CGI/1.1
+    [SERVER_PROTOCOL] => HTTP/1.1
+    [REQUEST_METHOD] => GET
+    [QUERY_STRING] => 
+    [REQUEST_URI] => /auth
+    [SCRIPT_NAME] => /api/index.php
+    [PHP_SELF] => /api/index.php
+    [REQUEST_TIME_FLOAT] => 1610373799.247
+    [REQUEST_TIME] => 1610373799
+)
+
+
+SESSION:
+Array
+(
+    [projectName] => Humlab Speech
+    [shibSessionId] => _4329e2d8386fd5bfb07eed0befa380e3
+    [shibSessionExpires] => 1610397750
+    [shibSessionInactivity] => 1610377399
+    [shibIdentityProvider] => https://idp.localtest.me/auth/realms/hird
+    [firstName] => Johan
+    [lastName] => von Boer
+    [email] => johanvonboer@runbox.com
+    [test] => test
+    [gitlabProjects] => Array
+        (
+        )
+
+)
+
+--------
+SERVER:
+Array
+(
+    [REDIRECT_SCRIPT_URL] => /auth
+    [REDIRECT_SCRIPT_URI] => https://localtest.me/auth
+    [REDIRECT_Shib-Handler] => https://localtest.me/Shibboleth.sso
+    [REDIRECT_Shib-Application-ID] => default
+    [REDIRECT_Shib-Session-ID] => _4329e2d8386fd5bfb07eed0befa380e3
+    [REDIRECT_Shib-Identity-Provider] => https://idp.localtest.me/auth/realms/hird
+    [REDIRECT_Shib-Authentication-Instant] => 2021-01-11T12:42:30.135Z
+    [REDIRECT_Shib-Authentication-Method] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-AuthnContext-Class] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-Session-Index] => b3480179-a16e-44ac-8e71-8590c4dfa05c::42b7650a-9f22-4ab7-a67b-2836cecf22e7
+    [REDIRECT_Shib-Session-Expires] => 1610397750
+    [REDIRECT_Shib-Session-Inactivity] => 1610377642
+    [REDIRECT_email] => johanvonboer@runbox.com
+    [REDIRECT_givenName] => Johan
+    [REDIRECT_sn] => von Boer
+    [REDIRECT_HTTPS] => on
+    [REDIRECT_SSL_TLS_SNI] => localtest.me
+    [REDIRECT_STATUS] => 200
+    [SCRIPT_URL] => /auth
+    [SCRIPT_URI] => https://localtest.me/auth
+    [HTTPS] => on
+    [SSL_TLS_SNI] => localtest.me
+    [HTTP_HOST] => localtest.me
+    [HTTP_CONNECTION] => keep-alive
+    [HTTP_PRAGMA] => no-cache
+    [HTTP_CACHE_CONTROL] => no-cache
+    [HTTP_UPGRADE_INSECURE_REQUESTS] => 1
+    [HTTP_USER_AGENT] => Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36
+    [HTTP_ACCEPT] => text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+    [HTTP_SEC_GPC] => 1
+    [HTTP_SEC_FETCH_SITE] => same-origin
+    [HTTP_SEC_FETCH_MODE] => navigate
+    [HTTP_SEC_FETCH_USER] => ?1
+    [HTTP_SEC_FETCH_DEST] => document
+    [HTTP_ACCEPT_ENCODING] => gzip, deflate, br
+    [HTTP_ACCEPT_LANGUAGE] => en-US,en;q=0.9
+    [HTTP_COOKIE] => _shibsession_64656661756c7468747470733a2f2f6c6f63616c746573742e6d65=_4329e2d8386fd5bfb07eed0befa380e3; PHPSESSID=2rcskv8v2ki43nf89019q86isi
+    [PATH] => /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    [SERVER_SIGNATURE] => <address>Apache/2.4.38 (Debian) Server at localtest.me Port 443</address>
+
+    [SERVER_SOFTWARE] => Apache/2.4.38 (Debian)
+    [SERVER_NAME] => localtest.me
+    [SERVER_ADDR] => 172.27.0.8
+    [SERVER_PORT] => 443
+    [REMOTE_ADDR] => 172.27.0.1
+    [DOCUMENT_ROOT] => /var/www/html
+    [REQUEST_SCHEME] => https
+    [CONTEXT_PREFIX] => 
+    [CONTEXT_DOCUMENT_ROOT] => /var/www/html
+    [SERVER_ADMIN] => support@humlab.umu.se
+    [SCRIPT_FILENAME] => /var/www/html/api/index.php
+    [REMOTE_PORT] => 34300
+    [REDIRECT_REMOTE_USER] => 
+    [REDIRECT_URL] => /auth
+    [GATEWAY_INTERFACE] => CGI/1.1
+    [SERVER_PROTOCOL] => HTTP/1.1
+    [REQUEST_METHOD] => GET
+    [QUERY_STRING] => 
+    [REQUEST_URI] => /auth
+    [SCRIPT_NAME] => /api/index.php
+    [PHP_SELF] => /api/index.php
+    [REQUEST_TIME_FLOAT] => 1610374042.355
+    [REQUEST_TIME] => 1610374042
+)
+
+
+SESSION:
+Array
+(
+    [projectName] => Humlab Speech
+    [shibSessionId] => _4329e2d8386fd5bfb07eed0befa380e3
+    [shibSessionExpires] => 1610397750
+    [shibSessionInactivity] => 1610377642
+    [shibIdentityProvider] => https://idp.localtest.me/auth/realms/hird
+    [firstName] => Johan
+    [lastName] => von Boer
+    [email] => johanvonboer@runbox.com
+    [test] => test
+    [gitlabProjects] => Array
+        (
+        )
+
+)
+
+--------
+SERVER:
+Array
+(
+    [REDIRECT_SCRIPT_URL] => /auth
+    [REDIRECT_SCRIPT_URI] => https://localtest.me/auth
+    [REDIRECT_Shib-Handler] => https://localtest.me/Shibboleth.sso
+    [REDIRECT_Shib-Application-ID] => default
+    [REDIRECT_Shib-Session-ID] => _4329e2d8386fd5bfb07eed0befa380e3
+    [REDIRECT_Shib-Identity-Provider] => https://idp.localtest.me/auth/realms/hird
+    [REDIRECT_Shib-Authentication-Instant] => 2021-01-11T12:42:30.135Z
+    [REDIRECT_Shib-Authentication-Method] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-AuthnContext-Class] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-Session-Index] => b3480179-a16e-44ac-8e71-8590c4dfa05c::42b7650a-9f22-4ab7-a67b-2836cecf22e7
+    [REDIRECT_Shib-Session-Expires] => 1610397750
+    [REDIRECT_Shib-Session-Inactivity] => 1610377651
+    [REDIRECT_email] => johanvonboer@runbox.com
+    [REDIRECT_givenName] => Johan
+    [REDIRECT_sn] => von Boer
+    [REDIRECT_HTTPS] => on
+    [REDIRECT_SSL_TLS_SNI] => localtest.me
+    [REDIRECT_STATUS] => 200
+    [SCRIPT_URL] => /auth
+    [SCRIPT_URI] => https://localtest.me/auth
+    [HTTPS] => on
+    [SSL_TLS_SNI] => localtest.me
+    [HTTP_HOST] => localtest.me
+    [HTTP_CONNECTION] => keep-alive
+    [HTTP_PRAGMA] => no-cache
+    [HTTP_CACHE_CONTROL] => no-cache
+    [HTTP_UPGRADE_INSECURE_REQUESTS] => 1
+    [HTTP_USER_AGENT] => Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36
+    [HTTP_ACCEPT] => text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+    [HTTP_SEC_GPC] => 1
+    [HTTP_SEC_FETCH_SITE] => same-origin
+    [HTTP_SEC_FETCH_MODE] => navigate
+    [HTTP_SEC_FETCH_USER] => ?1
+    [HTTP_SEC_FETCH_DEST] => document
+    [HTTP_ACCEPT_ENCODING] => gzip, deflate, br
+    [HTTP_ACCEPT_LANGUAGE] => en-US,en;q=0.9
+    [HTTP_COOKIE] => _shibsession_64656661756c7468747470733a2f2f6c6f63616c746573742e6d65=_4329e2d8386fd5bfb07eed0befa380e3; PHPSESSID=2rcskv8v2ki43nf89019q86isi
+    [PATH] => /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    [SERVER_SIGNATURE] => <address>Apache/2.4.38 (Debian) Server at localtest.me Port 443</address>
+
+    [SERVER_SOFTWARE] => Apache/2.4.38 (Debian)
+    [SERVER_NAME] => localtest.me
+    [SERVER_ADDR] => 172.27.0.8
+    [SERVER_PORT] => 443
+    [REMOTE_ADDR] => 172.27.0.1
+    [DOCUMENT_ROOT] => /var/www/html
+    [REQUEST_SCHEME] => https
+    [CONTEXT_PREFIX] => 
+    [CONTEXT_DOCUMENT_ROOT] => /var/www/html
+    [SERVER_ADMIN] => support@humlab.umu.se
+    [SCRIPT_FILENAME] => /var/www/html/api/index.php
+    [REMOTE_PORT] => 34342
+    [REDIRECT_REMOTE_USER] => 
+    [REDIRECT_URL] => /auth
+    [GATEWAY_INTERFACE] => CGI/1.1
+    [SERVER_PROTOCOL] => HTTP/1.1
+    [REQUEST_METHOD] => GET
+    [QUERY_STRING] => 
+    [REQUEST_URI] => /auth
+    [SCRIPT_NAME] => /api/index.php
+    [PHP_SELF] => /api/index.php
+    [REQUEST_TIME_FLOAT] => 1610374051.064
+    [REQUEST_TIME] => 1610374051
+)
+
+
+SESSION:
+Array
+(
+    [projectName] => Humlab Speech
+    [shibSessionId] => _4329e2d8386fd5bfb07eed0befa380e3
+    [shibSessionExpires] => 1610397750
+    [shibSessionInactivity] => 1610377651
+    [shibIdentityProvider] => https://idp.localtest.me/auth/realms/hird
+    [firstName] => Johan
+    [lastName] => von Boer
+    [email] => johanvonboer@runbox.com
+    [test] => test
+    [gitlabProjects] => Array
+        (
+        )
+
+)
+
+--------
+SERVER:
+Array
+(
+    [REDIRECT_SCRIPT_URL] => /auth
+    [REDIRECT_SCRIPT_URI] => https://localtest.me/auth
+    [REDIRECT_Shib-Handler] => https://localtest.me/Shibboleth.sso
+    [REDIRECT_Shib-Application-ID] => default
+    [REDIRECT_Shib-Session-ID] => _4329e2d8386fd5bfb07eed0befa380e3
+    [REDIRECT_Shib-Identity-Provider] => https://idp.localtest.me/auth/realms/hird
+    [REDIRECT_Shib-Authentication-Instant] => 2021-01-11T12:42:30.135Z
+    [REDIRECT_Shib-Authentication-Method] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-AuthnContext-Class] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-Session-Index] => b3480179-a16e-44ac-8e71-8590c4dfa05c::42b7650a-9f22-4ab7-a67b-2836cecf22e7
+    [REDIRECT_Shib-Session-Expires] => 1610397750
+    [REDIRECT_Shib-Session-Inactivity] => 1610377842
+    [REDIRECT_email] => johanvonboer@runbox.com
+    [REDIRECT_givenName] => Johan
+    [REDIRECT_sn] => von Boer
+    [REDIRECT_HTTPS] => on
+    [REDIRECT_SSL_TLS_SNI] => localtest.me
+    [REDIRECT_STATUS] => 200
+    [SCRIPT_URL] => /auth
+    [SCRIPT_URI] => https://localtest.me/auth
+    [HTTPS] => on
+    [SSL_TLS_SNI] => localtest.me
+    [HTTP_HOST] => localtest.me
+    [HTTP_CONNECTION] => keep-alive
+    [HTTP_PRAGMA] => no-cache
+    [HTTP_CACHE_CONTROL] => no-cache
+    [HTTP_UPGRADE_INSECURE_REQUESTS] => 1
+    [HTTP_USER_AGENT] => Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36
+    [HTTP_ACCEPT] => text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+    [HTTP_SEC_GPC] => 1
+    [HTTP_SEC_FETCH_SITE] => same-origin
+    [HTTP_SEC_FETCH_MODE] => navigate
+    [HTTP_SEC_FETCH_USER] => ?1
+    [HTTP_SEC_FETCH_DEST] => document
+    [HTTP_ACCEPT_ENCODING] => gzip, deflate, br
+    [HTTP_ACCEPT_LANGUAGE] => en-US,en;q=0.9
+    [HTTP_COOKIE] => _shibsession_64656661756c7468747470733a2f2f6c6f63616c746573742e6d65=_4329e2d8386fd5bfb07eed0befa380e3; PHPSESSID=2rcskv8v2ki43nf89019q86isi
+    [PATH] => /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    [SERVER_SIGNATURE] => <address>Apache/2.4.38 (Debian) Server at localtest.me Port 443</address>
+
+    [SERVER_SOFTWARE] => Apache/2.4.38 (Debian)
+    [SERVER_NAME] => localtest.me
+    [SERVER_ADDR] => 172.27.0.8
+    [SERVER_PORT] => 443
+    [REMOTE_ADDR] => 172.27.0.1
+    [DOCUMENT_ROOT] => /var/www/html
+    [REQUEST_SCHEME] => https
+    [CONTEXT_PREFIX] => 
+    [CONTEXT_DOCUMENT_ROOT] => /var/www/html
+    [SERVER_ADMIN] => support@humlab.umu.se
+    [SCRIPT_FILENAME] => /var/www/html/api/index.php
+    [REMOTE_PORT] => 34424
+    [REDIRECT_REMOTE_USER] => 
+    [REDIRECT_URL] => /auth
+    [GATEWAY_INTERFACE] => CGI/1.1
+    [SERVER_PROTOCOL] => HTTP/1.1
+    [REQUEST_METHOD] => GET
+    [QUERY_STRING] => 
+    [REQUEST_URI] => /auth
+    [SCRIPT_NAME] => /api/index.php
+    [PHP_SELF] => /api/index.php
+    [REQUEST_TIME_FLOAT] => 1610374242.668
+    [REQUEST_TIME] => 1610374242
+)
+
+
+SESSION:
+Array
+(
+    [projectName] => Humlab Speech
+    [shibSessionId] => _4329e2d8386fd5bfb07eed0befa380e3
+    [shibSessionExpires] => 1610397750
+    [shibSessionInactivity] => 1610377842
+    [shibIdentityProvider] => https://idp.localtest.me/auth/realms/hird
+    [firstName] => Johan
+    [lastName] => von Boer
+    [email] => johanvonboer@runbox.com
+    [test] => test
+    [gitlabProjects] => Array
+        (
+        )
+
+)
+
+--------
+SERVER:
+Array
+(
+    [REDIRECT_SCRIPT_URL] => /auth
+    [REDIRECT_SCRIPT_URI] => https://localtest.me/auth
+    [REDIRECT_Shib-Handler] => https://localtest.me/Shibboleth.sso
+    [REDIRECT_Shib-Application-ID] => default
+    [REDIRECT_Shib-Session-ID] => _4329e2d8386fd5bfb07eed0befa380e3
+    [REDIRECT_Shib-Identity-Provider] => https://idp.localtest.me/auth/realms/hird
+    [REDIRECT_Shib-Authentication-Instant] => 2021-01-11T12:42:30.135Z
+    [REDIRECT_Shib-Authentication-Method] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-AuthnContext-Class] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-Session-Index] => b3480179-a16e-44ac-8e71-8590c4dfa05c::42b7650a-9f22-4ab7-a67b-2836cecf22e7
+    [REDIRECT_Shib-Session-Expires] => 1610397750
+    [REDIRECT_Shib-Session-Inactivity] => 1610377937
+    [REDIRECT_email] => johanvonboer@runbox.com
+    [REDIRECT_givenName] => Johan
+    [REDIRECT_sn] => von Boer
+    [REDIRECT_HTTPS] => on
+    [REDIRECT_SSL_TLS_SNI] => localtest.me
+    [REDIRECT_STATUS] => 200
+    [SCRIPT_URL] => /auth
+    [SCRIPT_URI] => https://localtest.me/auth
+    [HTTPS] => on
+    [SSL_TLS_SNI] => localtest.me
+    [HTTP_HOST] => localtest.me
+    [HTTP_CONNECTION] => keep-alive
+    [HTTP_PRAGMA] => no-cache
+    [HTTP_CACHE_CONTROL] => no-cache
+    [HTTP_UPGRADE_INSECURE_REQUESTS] => 1
+    [HTTP_USER_AGENT] => Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36
+    [HTTP_ACCEPT] => text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+    [HTTP_SEC_GPC] => 1
+    [HTTP_SEC_FETCH_SITE] => same-origin
+    [HTTP_SEC_FETCH_MODE] => navigate
+    [HTTP_SEC_FETCH_USER] => ?1
+    [HTTP_SEC_FETCH_DEST] => document
+    [HTTP_ACCEPT_ENCODING] => gzip, deflate, br
+    [HTTP_ACCEPT_LANGUAGE] => en-US,en;q=0.9
+    [HTTP_COOKIE] => _shibsession_64656661756c7468747470733a2f2f6c6f63616c746573742e6d65=_4329e2d8386fd5bfb07eed0befa380e3; PHPSESSID=2rcskv8v2ki43nf89019q86isi
+    [PATH] => /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    [SERVER_SIGNATURE] => <address>Apache/2.4.38 (Debian) Server at localtest.me Port 443</address>
+
+    [SERVER_SOFTWARE] => Apache/2.4.38 (Debian)
+    [SERVER_NAME] => localtest.me
+    [SERVER_ADDR] => 172.27.0.8
+    [SERVER_PORT] => 443
+    [REMOTE_ADDR] => 172.27.0.1
+    [DOCUMENT_ROOT] => /var/www/html
+    [REQUEST_SCHEME] => https
+    [CONTEXT_PREFIX] => 
+    [CONTEXT_DOCUMENT_ROOT] => /var/www/html
+    [SERVER_ADMIN] => support@humlab.umu.se
+    [SCRIPT_FILENAME] => /var/www/html/api/index.php
+    [REMOTE_PORT] => 34548
+    [REDIRECT_REMOTE_USER] => 
+    [REDIRECT_URL] => /auth
+    [GATEWAY_INTERFACE] => CGI/1.1
+    [SERVER_PROTOCOL] => HTTP/1.1
+    [REQUEST_METHOD] => GET
+    [QUERY_STRING] => 
+    [REQUEST_URI] => /auth
+    [SCRIPT_NAME] => /api/index.php
+    [PHP_SELF] => /api/index.php
+    [REQUEST_TIME_FLOAT] => 1610374337.239
+    [REQUEST_TIME] => 1610374337
+)
+
+
+SESSION:
+Array
+(
+    [projectName] => Humlab Speech
+    [shibSessionId] => _4329e2d8386fd5bfb07eed0befa380e3
+    [shibSessionExpires] => 1610397750
+    [shibSessionInactivity] => 1610377937
+    [shibIdentityProvider] => https://idp.localtest.me/auth/realms/hird
+    [firstName] => Johan
+    [lastName] => von Boer
+    [email] => johanvonboer@runbox.com
+    [test] => test
+    [gitlabProjects] => Array
+        (
+        )
+
+)
+
+--------
+SERVER:
+Array
+(
+    [REDIRECT_SCRIPT_URL] => /auth
+    [REDIRECT_SCRIPT_URI] => https://localtest.me/auth
+    [REDIRECT_Shib-Handler] => https://localtest.me/Shibboleth.sso
+    [REDIRECT_Shib-Application-ID] => default
+    [REDIRECT_Shib-Session-ID] => _4329e2d8386fd5bfb07eed0befa380e3
+    [REDIRECT_Shib-Identity-Provider] => https://idp.localtest.me/auth/realms/hird
+    [REDIRECT_Shib-Authentication-Instant] => 2021-01-11T12:42:30.135Z
+    [REDIRECT_Shib-Authentication-Method] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-AuthnContext-Class] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-Session-Index] => b3480179-a16e-44ac-8e71-8590c4dfa05c::42b7650a-9f22-4ab7-a67b-2836cecf22e7
+    [REDIRECT_Shib-Session-Expires] => 1610397750
+    [REDIRECT_Shib-Session-Inactivity] => 1610377939
+    [REDIRECT_email] => johanvonboer@runbox.com
+    [REDIRECT_givenName] => Johan
+    [REDIRECT_sn] => von Boer
+    [REDIRECT_HTTPS] => on
+    [REDIRECT_SSL_TLS_SNI] => localtest.me
+    [REDIRECT_STATUS] => 200
+    [SCRIPT_URL] => /auth
+    [SCRIPT_URI] => https://localtest.me/auth
+    [HTTPS] => on
+    [SSL_TLS_SNI] => localtest.me
+    [HTTP_HOST] => localtest.me
+    [HTTP_CONNECTION] => keep-alive
+    [HTTP_PRAGMA] => no-cache
+    [HTTP_CACHE_CONTROL] => no-cache
+    [HTTP_UPGRADE_INSECURE_REQUESTS] => 1
+    [HTTP_USER_AGENT] => Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36
+    [HTTP_ACCEPT] => text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+    [HTTP_SEC_GPC] => 1
+    [HTTP_SEC_FETCH_SITE] => same-origin
+    [HTTP_SEC_FETCH_MODE] => navigate
+    [HTTP_SEC_FETCH_USER] => ?1
+    [HTTP_SEC_FETCH_DEST] => document
+    [HTTP_ACCEPT_ENCODING] => gzip, deflate, br
+    [HTTP_ACCEPT_LANGUAGE] => en-US,en;q=0.9
+    [HTTP_COOKIE] => _shibsession_64656661756c7468747470733a2f2f6c6f63616c746573742e6d65=_4329e2d8386fd5bfb07eed0befa380e3; PHPSESSID=2rcskv8v2ki43nf89019q86isi
+    [PATH] => /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    [SERVER_SIGNATURE] => <address>Apache/2.4.38 (Debian) Server at localtest.me Port 443</address>
+
+    [SERVER_SOFTWARE] => Apache/2.4.38 (Debian)
+    [SERVER_NAME] => localtest.me
+    [SERVER_ADDR] => 172.27.0.8
+    [SERVER_PORT] => 443
+    [REMOTE_ADDR] => 172.27.0.1
+    [DOCUMENT_ROOT] => /var/www/html
+    [REQUEST_SCHEME] => https
+    [CONTEXT_PREFIX] => 
+    [CONTEXT_DOCUMENT_ROOT] => /var/www/html
+    [SERVER_ADMIN] => support@humlab.umu.se
+    [SCRIPT_FILENAME] => /var/www/html/api/index.php
+    [REMOTE_PORT] => 34548
+    [REDIRECT_REMOTE_USER] => 
+    [REDIRECT_URL] => /auth
+    [GATEWAY_INTERFACE] => CGI/1.1
+    [SERVER_PROTOCOL] => HTTP/1.1
+    [REQUEST_METHOD] => GET
+    [QUERY_STRING] => 
+    [REQUEST_URI] => /auth
+    [SCRIPT_NAME] => /api/index.php
+    [PHP_SELF] => /api/index.php
+    [REQUEST_TIME_FLOAT] => 1610374339.295
+    [REQUEST_TIME] => 1610374339
+)
+
+
+SESSION:
+Array
+(
+    [projectName] => Humlab Speech
+    [shibSessionId] => _4329e2d8386fd5bfb07eed0befa380e3
+    [shibSessionExpires] => 1610397750
+    [shibSessionInactivity] => 1610377939
+    [shibIdentityProvider] => https://idp.localtest.me/auth/realms/hird
+    [firstName] => Johan
+    [lastName] => von Boer
+    [email] => johanvonboer@runbox.com
+    [test] => test
+    [gitlabProjects] => Array
+        (
+        )
+
+)
+
+--------
+SERVER:
+Array
+(
+    [REDIRECT_SCRIPT_URL] => /auth
+    [REDIRECT_SCRIPT_URI] => https://localtest.me/auth
+    [REDIRECT_Shib-Handler] => https://localtest.me/Shibboleth.sso
+    [REDIRECT_Shib-Application-ID] => default
+    [REDIRECT_Shib-Session-ID] => _4329e2d8386fd5bfb07eed0befa380e3
+    [REDIRECT_Shib-Identity-Provider] => https://idp.localtest.me/auth/realms/hird
+    [REDIRECT_Shib-Authentication-Instant] => 2021-01-11T12:42:30.135Z
+    [REDIRECT_Shib-Authentication-Method] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-AuthnContext-Class] => urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified
+    [REDIRECT_Shib-Session-Index] => b3480179-a16e-44ac-8e71-8590c4dfa05c::42b7650a-9f22-4ab7-a67b-2836cecf22e7
+    [REDIRECT_Shib-Session-Expires] => 1610397750
+    [REDIRECT_Shib-Session-Inactivity] => 1610378304
+    [REDIRECT_email] => johanvonboer@runbox.com
+    [REDIRECT_givenName] => Johan
+    [REDIRECT_sn] => von Boer
+    [REDIRECT_HTTPS] => on
+    [REDIRECT_SSL_TLS_SNI] => localtest.me
+    [REDIRECT_STATUS] => 200
+    [SCRIPT_URL] => /auth
+    [SCRIPT_URI] => https://localtest.me/auth
+    [HTTPS] => on
+    [SSL_TLS_SNI] => localtest.me
+    [HTTP_HOST] => localtest.me
+    [HTTP_CONNECTION] => keep-alive
+    [HTTP_PRAGMA] => no-cache
+    [HTTP_CACHE_CONTROL] => no-cache
+    [HTTP_UPGRADE_INSECURE_REQUESTS] => 1
+    [HTTP_USER_AGENT] => Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36
+    [HTTP_ACCEPT] => text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+    [HTTP_SEC_GPC] => 1
+    [HTTP_SEC_FETCH_SITE] => same-origin
+    [HTTP_SEC_FETCH_MODE] => navigate
+    [HTTP_SEC_FETCH_USER] => ?1
+    [HTTP_SEC_FETCH_DEST] => document
+    [HTTP_ACCEPT_ENCODING] => gzip, deflate, br
+    [HTTP_ACCEPT_LANGUAGE] => en-US,en;q=0.9
+    [HTTP_COOKIE] => _shibsession_64656661756c7468747470733a2f2f6c6f63616c746573742e6d65=_4329e2d8386fd5bfb07eed0befa380e3; PHPSESSID=2rcskv8v2ki43nf89019q86isi
+    [PATH] => /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    [SERVER_SIGNATURE] => <address>Apache/2.4.38 (Debian) Server at localtest.me Port 443</address>
+
+    [SERVER_SOFTWARE] => Apache/2.4.38 (Debian)
+    [SERVER_NAME] => localtest.me
+    [SERVER_ADDR] => 172.27.0.8
+    [SERVER_PORT] => 443
+    [REMOTE_ADDR] => 172.27.0.1
+    [DOCUMENT_ROOT] => /var/www/html
+    [REQUEST_SCHEME] => https
+    [CONTEXT_PREFIX] => 
+    [CONTEXT_DOCUMENT_ROOT] => /var/www/html
+    [SERVER_ADMIN] => support@humlab.umu.se
+    [SCRIPT_FILENAME] => /var/www/html/api/index.php
+    [REMOTE_PORT] => 34666
+    [REDIRECT_REMOTE_USER] => 
+    [REDIRECT_URL] => /auth
+    [GATEWAY_INTERFACE] => CGI/1.1
+    [SERVER_PROTOCOL] => HTTP/1.1
+    [REQUEST_METHOD] => GET
+    [QUERY_STRING] => 
+    [REQUEST_URI] => /auth
+    [SCRIPT_NAME] => /api/index.php
+    [PHP_SELF] => /api/index.php
+    [REQUEST_TIME_FLOAT] => 1610374704.923
+    [REQUEST_TIME] => 1610374704
+)
+
+
+SESSION:
+Array
+(
+    [projectName] => Humlab Speech
+    [shibSessionId] => _4329e2d8386fd5bfb07eed0befa380e3
+    [shibSessionExpires] => 1610397750
+    [shibSessionInactivity] => 1610378304
+    [shibIdentityProvider] => https://idp.localtest.me/auth/realms/hird
+    [firstName] => Johan
+    [lastName] => von Boer
+    [email] => johanvonboer@runbox.com
+    [test] => test
+    [gitlabProjects] => Array
+        (
+        )
+
+)
+
+--------
