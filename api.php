@@ -486,9 +486,9 @@ function createGitlabUserImpersonationToken() {
     return $response->getBody()->getContents();
 }
 */
-//curl -d "email=whatevs@umu.se&name=User One&username=user1&force_random_password=1&reset_password=false" http://gitlab:80/api/v4/users?private_token=57Cyg_rX7UEfDMPi7tWo
+//curl -d "email=whatevs@umu.se&name=User One&username=user1&force_random_password=1&reset_password=false" http://gitlab:80/api/v4/users?private_token=
 
-//curl http://gitlab:80/api/v4/users?username=johan.von.boer&private_token=57Cyg_rX7UEfDMPi7tWo
+//curl http://gitlab:80/api/v4/users?username=johan.von.boer&private_token=
 
 //Gitlab username: johan.von.boer_at_umu.se
 
