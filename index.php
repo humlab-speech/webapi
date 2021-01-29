@@ -1,6 +1,4 @@
 <?php
-//file_put_contents("index.php-acccess.log", print_r($_SERVER, true), FILE_APPEND);
-
 $domain = getenv("HIRD_DOMAIN_NAME");
 session_set_cookie_params(60*60*8, "/", ".".$domain);
 session_start();
@@ -32,9 +30,9 @@ if($shibHeadersFound) {
     else {
         $_SESSION['email'] = $_SERVER[$attributePrefix.'mail'];
     }
-}
 
-//file_put_contents("index.php-acccess.log", "SERVER:\n".print_r($_SERVER, true)."\n\nSESSION:\n".print_r($_SESSION, true)."\n--------\n", FILE_APPEND);
+    $_SESSION['authorized'] = true;
+}
 
 include("../index.html");
 ?>

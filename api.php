@@ -6,21 +6,41 @@ $domain = getenv("HIRD_DOMAIN_NAME");
 session_set_cookie_params(60*60*8, "/", ".".$domain);
 session_start();
 
-//$gitlabUser = null;
 $gitlabAddress = "http://gitlab:80";
 $gitlabAccessToken = getenv("GIT_API_ACCESS_TOKEN");
 $hirdApiAccessToken = getenv("HIRD_API_ACCESS_TOKEN");
 
-
 $reqPath = $_SERVER['REQUEST_URI'];
 $reqMethod = $_SERVER['REQUEST_METHOD'];
 
+
+class ApiResponse {
+    public $code;
+    public $body;
+    function __construct($code, $body = "") {
+        $this->code = $code;
+        $this->body = $body;
+
+        http_response_code($this->code);
+    }
+
+    function toJSON() {
+        return "{ \"code\": ".json_encode($this->code).", \"body\": ".json_encode($this->body)." }";
+    }
+}
+
 $rstudioRouterInterface = new RStudioRouterInterface();
+
+if($_SESSION['authorized'] !== true) {
+    //if user has not passed a valid authentication, don't allow access to this API
+    echo "{ 'msg': 'no access' }";
+    exit();
+}
 
 if($reqMethod == "GET") {
     switch($reqPath) {
         case "/api/v1/magick":
-            $out = magick();
+            $out = dumpServerVariables();
         break;
         case "/api/v1/user":
             $out = getGitlabUser();
@@ -34,20 +54,85 @@ if($reqMethod == "GET") {
         case "/api/v1/signout":
             signOut();
         break;
-        /*
-        case "/api/v1/rstudio/sessions":
-            $out = $rstudioRouterInterface->getSessions();
-        break;
-        */
     }
-
     echo $out;
 }
-/*
-print_r($reqPath);
-print_r($_SERVER);
-file_put_contents("phpdump.out", print_r($_SERVER, true), FILE_APPEND);
-*/
+
+if($reqMethod == "POST") {
+    $postData = json_decode($_POST['data']);
+
+    switch($reqPath) {
+        case "/api/v1/getUserAccessToken":
+            $out = getUserAccessToken();
+        break;
+        case "/api/v1/user":
+            $out = createGitlabUser();
+        break;
+        case "/api/v1/user/project":
+            //TODO: Perhaps verify that this user has the right to create a new project?
+            $out = createGitlabProject();
+        break;
+        case "/api/v1/rstudio/session/please":
+            //FIXME: This should probably be a GET, not a POST
+            if(userHasProjectAuthorization($postData->projectId)) {
+                $out = $rstudioRouterInterface->getSession($postData->projectId);
+            }
+            else {
+                $ar = new ApiResponse(401, array('message' => 'This user does not have access to that project.'));
+                $out = $ar->toJSON();
+            }
+        break;
+        case "/api/v1/rstudio/save":
+            $out = $rstudioRouterInterface->commitSession($postData->rstudioSession);
+        break;
+        case "/api/v1/rstudio/close":
+            $out = $rstudioRouterInterface->delSession($postData->rstudioSession);
+        break;
+        case "/api/v1/user/project/delete":
+            if(userHasProjectAuthorization($postData->projectId)) {
+                $out = deleteGitlabProject($postData->projectId);
+            }
+            else {
+                $ar = new ApiResponse(401, array('message' => 'This user does not have access to that project.'));
+                $out = $ar->toJSON();
+            }
+        break;
+    }
+    echo $out;
+}
+
+function userHasProjectAuthorization($projectId) {
+    global $gitlabAddress, $gitlabAccessToken, $gitlabUser;
+
+    $arProjects = getGitlabUserProjects();
+    $projects = json_decode($arProjects)->body;
+
+    $foundProject = false;
+    foreach($projects as $key => $project) {
+        if($project->id == $projectId) {
+            $foundProject = true;
+        }
+    }
+    return $foundProject;
+}
+
+/**
+ * Get a Gitlab access token for this user - this is better (from a security standpoint) than using the root access token.
+ * 
+ * This function does not work - returns a 404 from Gitlab, not sure why atm.
+ */
+function getUserAccessToken() {
+    global $gitlabAddress, $gitlabAccessToken, $gitlabUser;
+    $gitlabUsername = getGitLabUsername($_SESSION['email']);
+    $gitlabApiRequest = $gitlabAddress."/api/v4/personal_access_tokens?user_id=".$_SESSION['gitlabUser']->id."&private_token=".$gitlabAccessToken;
+
+    $res = httpRequest("GET", $gitlabApiRequest);
+
+    $response = [];
+    $response['gitlab_response'] = $res;
+
+    return json_encode($response);
+}
 
 function signOut() {
     $_SESSION = [];
@@ -69,7 +154,7 @@ function httpRequest($method = "GET", $url, $options = []) {
     $exception = false;
     $response = "";
 
-    if(strtolower($method) == "post") {
+    if(strtolower($method) == "post" || strtolower($method) == "put") {
         try {
             $response = $httpClient->request($method, $url, $options);
         }
@@ -87,16 +172,33 @@ function httpRequest($method = "GET", $url, $options = []) {
         }
     }
 
+    $ret = [];
+
     if($exception !== false) {
-        //This contains the gitlab root key - very sensitive info - in production this shouldn't be outputted at all, but just redacting the key for now to make debugging easier in development
+        //This contains the gitlab root key - very sensitive info - redacting the key here
         $exceptionOutput = preg_replace("/private_token=.[A-Za-z0-9_-]*/", "/private_token=REDACTED", $exception);
-        return $exceptionOutput;
+        $ret['body'] = $exceptionOutput;
+    }
+    else {
+        if(is_object($response)) {
+            $ret['body'] = $response->getBody()->getContents();
+        }
+        else {
+            $ret['body'] = $response;
+        }
     }
 
-    return $response;
+    if(is_object($response)) {
+        $ret['code'] = $response->getStatusCode();
+    }
+
+    return $ret;
 }
 
-function magick() {
+/**
+ * For debugging
+ */
+function dumpServerVariables() {
     echo "SERVER:\n";
     print_r($_SERVER);
     echo "SESSION:\n";
@@ -105,48 +207,9 @@ function magick() {
     echo getGitLabUsername($_SESSION['email']);
 }
 
-//HERE BE DANGER - This section needs to have some security applied
-if($reqMethod == "POST") {
-    $postData = json_decode($_POST['data']);
-
-    switch($reqPath) {
-        case "/api/v1/user":
-            //TODO: How do we make sure this is a valid user which should be made? We only have the client's word for it at this point - which can't be trusted!
-            $out = createGitlabUser();
-        break;
-        case "/api/v1/user/project":
-            //TODO: Perhaps verify that this user has the right to create a new project?
-            $out = createGitlabProject();
-        break;
-        case "/api/v1/rstudio/session/please":
-            //FIXME: This should probably be a GET, not a POST
-            //$out = "{ 'status': 'maybe ok' }";
-            $out = $rstudioRouterInterface->getSession($postData->projectId);
-        break;
-        case "/api/v1/rstudio/save":
-            $out = $rstudioRouterInterface->commitSession($postData->rstudioSession);
-        break;
-        case "/api/v1/rstudio/close":
-            $out = $rstudioRouterInterface->delSession($postData->rstudioSession);
-        break;
-        case "/api/v1/user/project/delete":
-            $out = deleteGitlabProject();
-        break;
-    }
-    echo $out;
-}
-
-
 if($reqMethod == "DELETE") {
     switch($reqPath) {
     }
-}
-
-//print_r($_SERVER);
-
-function checkUserProjectAccess($userId, $projectId) {
-    //FIXME: THIS (DESPERATELY) NEEDS IMPLEMENTING!!!
-    return true; //This is not 'great' in production
 }
 
 function getGitLabUsername($email) {
@@ -158,16 +221,6 @@ function addLog($msg) {
 }
 
 function getUserSessionAttributes() {
-    /*
-    $output = [
-        'FirstName' => $_SERVER['givenName'],
-        'LastName' => $_SERVER['sn'],
-        'FullName' => $_SERVER['givenName']." ".$_SERVER['sn'],
-        'Email' => $_SERVER['email'],
-        'GitlabUsername' => getGitLabUsername($_SERVER['email'])
-    ];
-    */
-
     $output = [
         'firstName' => $_SESSION['firstName'],
         'lastName' => $_SESSION['lastName'],
@@ -176,9 +229,8 @@ function getUserSessionAttributes() {
         'gitlabUsername' => getGitLabUsername($_SESSION['email'])
     ];
 
-    //$output = $_SESSION;
-
-    return json_encode($output);
+    $ar = new ApiResponse(200, $output);
+    return $ar->toJSON();
 }
 
 function createGitlabUser() {
@@ -188,96 +240,66 @@ function createGitlabUser() {
     $gitlabApiRequest = $gitlabAddress."/api/v4/users?username=".$gitlabUsername."&private_token=".$gitlabAccessToken;
 
     $options = [
-            'form_params' => [
-                'email' => $_SESSION['email'],
-                'name' => $_SESSION['firstName']." ".$_SESSION['lastName'],
-                'username' => $gitlabUsername,
-                'force_random_password' => '1',
-                'reset_password' => 'false',
-                'skip_confirmation' => true,
-                'provider' => $_SESSION['Shib-Identity-Provider']
+        'form_params' => [
+            'email' => $_SESSION['email'],
+            'name' => $_SESSION['firstName']." ".$_SESSION['lastName'],
+            'username' => $gitlabUsername,
+            'force_random_password' => '1',
+            'reset_password' => 'false',
+            'skip_confirmation' => true,
+            'provider' => $_SESSION['Shib-Identity-Provider']
         ]
     ];
 
     $response = httpRequest("POST", $gitlabApiRequest, $options); 
-    
-    if(is_string($response)) {
-        echo "Response was string!\n";
-        echo $response;
-    }
 
-    addLog("Creating gitlab user:\nRequest: ".$gitlabApiRequest."\nPOST data:\n".print_r($postData, true)."\nResponse: ".$data);
-
-    if($response->getStatusCode() == 409) {
-        //User already exists
-        return $response->getBody()->getContents();
-    }
-
-    if($response->getStatusCode() == 201) {
-        //$data = $response->getBody()->getContents();
-        //return $data;
-
-        return getGitlabUser();
+    if($response['code'] == 201) {
+        $userApiResponseObject = json_decode(getGitlabUser());
+        $gitlabUser = $userApiResponseObject->body;
+        $ar = new ApiResponse($response['code'], $gitlabUser);
     }
     else {
-        return "createGitlabUser: HTTP non-201 code (".$response->getStatusCode().")";
+        $ar = new ApiResponse($response['code'], $response['body']);
     }
+
+    return $ar->toJSON();
 }
 
 function getGitlabUser() {
     global $gitlabAddress, $gitlabAccessToken, $gitlabUser;
     //Gets User info from Gitlab for currently logged in user
-
-    /*
-    $httpClient = new GuzzleHttp\Client();
-    $gitlabUsername = getGitLabUsername($_SESSION['email']);
-    $gitlabApiRequest = $gitlabAddress."/api/v4/users?username=".$gitlabUsername."&private_token=".$gitlabAccessToken;
-    //$data = file_get_contents($gitlabApiRequest);
-    addLog("Getting gitlab user:\nRequest: ".$gitlabApiRequest."\nResponse: ");
-    try {
-        $response = $httpClient->request('GET', $gitlabAddress."/api/v4/users", [
-            'query' => [
-                'username' => $gitlabUsername,
-                'private_token' => $gitlabAccessToken
-            ]
-        ]);
-    }
-    catch(Exception $e) {
-        return $e;
-    }
-    */
-
     $gitlabUsername = getGitLabUsername($_SESSION['email']);
     $gitlabApiRequest = $gitlabAddress."/api/v4/users?username=".$gitlabUsername."&private_token=".$gitlabAccessToken;
 
     $response = httpRequest("GET", $gitlabApiRequest);
 
+    $ar = new ApiResponse($response['code']);
 
-    if($response->getStatusCode() == 200) {
-        $userListJson = $response->getBody()->getContents();
+    if($response['code'] == 200) {
+        $userListJson = $response['body'];
         $userList = json_decode($userListJson);
         if(empty($userList)) {
-            //User does not exist
-            return createGitlabUser();
+            //User does not exist, so create it and return it
+            $arCreateGitlabUser = createGitlabUser();
+            if(json_decode($arCreateGitlabUser)->code == 200) {
+                return getGitlabUser();
+            }
         }
         else {
             $_SESSION['gitlabUser'] = $userList[0];
-            return json_encode($userList[0]);
+            $ar->body = $userList[0];
         }
     }
     else {
-        return "getGitlabUser: HTTP non-200 code";
+        $ar->body = $response['body'];
     }
+
+    return $ar->toJSON();
 }
 
 function getGitlabUserProjects() {
     global $gitlabAddress, $gitlabAccessToken, $hirdApiAccessToken;
     //Gets Gitlab projects for currently logged in user
-
-    if(empty($_SESSION['email'])) {
-      echo "Tried to fetch projects without being signed in!";
-      return;
-    }
 
     if(empty($_SESSION['gitlabUser'])) {
         getGitlabUser();
@@ -286,40 +308,13 @@ function getGitlabUserProjects() {
     $gitlabUsername = getGitLabUsername($_SESSION['email']);
     $gitlabApiRequest = $gitlabAddress."/api/v4/users/".$gitlabUsername."/projects?private_token=".$gitlabAccessToken;
     $response = httpRequest("GET", $gitlabApiRequest);
-    $projects = json_decode($response->getBody());
+    $projects = json_decode($response['body']);
     $_SESSION['gitlabProjects'] = $projects;
-
-
     
-    //$data = file_get_contents($gitlabApiRequest);
-    addLog("Getting gitlab user projects:\nRequest: ".$gitlabApiRequest."\nResponse: ".$response->getBody());
-
-    /*
     //Also check if any of these projects have an active running session in the rstudio-router via its API
-    //$httpClient = new GuzzleHttp\Client();
-    $rstudioRouterApiRequest = "http://rstudio-router:80/api/sessions/".$_SESSION['gitlabUser']->id;
-    try {
-        //add header HIRD_API_ACCESS_TOKEN=$hirdApiAccessToken
-        $headers = ['HIRD_API_ACCESS_TOKEN' => $hirdApiAccessToken];
-
-        $rstudioSessions = $httpClient->request('GET', $rstudioRouterApiRequest, [
-            'headers' => [
-                'User-Agent' => 'hird-api/1.0',
-                'Accept'     => 'application/json',
-                'hird_api_access_token' => $hirdApiAccessToken
-            ]
-        ]);
-    }
-    catch(Exception $e) {
-        //addLog("Creating gitlab project:\nRequest: ".$gitlabApiRequest."\nPOST data:\n".print_r($postData, true)."\nResponse: ".$response);
-        return $e;
-    }
-    */
-
-
     $gitlabUsername = getGitLabUsername($_SESSION['email']);
     $rstudioRouterApiRequest = "http://rstudio-router:80/api/sessions/".$_SESSION['gitlabUser']->id;
-    $rstudioSessions = httpRequest("GET", $rstudioRouterApiRequest, [
+    $rstudioSessionsResponse = httpRequest("GET", $rstudioRouterApiRequest, [
         'headers' => [
             'User-Agent' => 'hird-api/1.0',
             'Accept'     => 'application/json',
@@ -327,169 +322,48 @@ function getGitlabUserProjects() {
         ]
     ]);
 
-    if(is_string($rstudioSessions)) {
-        echo "Response was string!\n";
-        echo $rstudioSessions;
-    }
-
-    $sessions = json_decode($rstudioSessions->getBody());
+    $sessions = json_decode($rstudioSessionsResponse['body']);
 
     foreach($projects as $key => $project) {
         $projects[$key]->sessions = array();
-        
         foreach($sessions as $sesKey => $session) {
-
             if($session->projectId == $project->id) {
                 $projects[$key]->sessions []= $session;
             }
-
         }
     }
-    
 
-    //Call to http://rstudio-router:80/api/sessions
-    return json_encode($projects);
-    //return $response->getBody();
+    $ar = new ApiResponse($response['code'], $projects);
+    
+    return $ar->toJSON();
 }
 
 function createGitlabProject() {
     global $gitlabAddress, $gitlabAccessToken;
-
-    //First, create user impersonation token - actually, don't think we need this
-    /*
-    $response = getAllGitlabUserImpersonationTokens();
-    if(empty(json_decode($response))) {
-        $token = createGitlabUserImpersonationToken();
-    }
-    */
-
-    /*
-    $gitlabUsername = getGitLabUsername($_SESSION['email']);
+    
     $gitlabApiRequest = $gitlabAddress."/api/v4/projects/user/".$_SESSION['gitlabUser']->id."?private_token=".$gitlabAccessToken;
-    $httpClient = new GuzzleHttp\Client();
-    $postData = array(
-        'name' => $_POST['name']
-        //'import_url' => $gitlabAddress.'/root/emu-db-template.git'
-    );
-    try {
-        $response = $httpClient->request('POST', $gitlabApiRequest, [
-            'form_params' => $postData
-        ]);
-    }
-    catch(Exception $e) {
-        //addLog("Creating gitlab project:\nRequest: ".$gitlabApiRequest."\nPOST data:\n".print_r($postData, true)."\nResponse: ".$response);
-        return $e;
-    }
-    */
-
-
-
-    $gitlabUsername = getGitLabUsername($_SESSION['email']);
-    $gitlabApiRequest = $gitlabAddress."/api/v4/projects/user/".$_SESSION['gitlabUser']->id."?private_token=".$gitlabAccessToken;
-    addLog("A1:".print_r($_POST, true));
-
+    
     $postData = json_decode($_POST['data']);
-    addLog("A2:".print_r($postData, true));
-    /*
-    $postData = array(
-        'name' => $_POST['name']
-        //'import_url' => $gitlabAddress.'/root/emu-db-template.git'
-    );
-    */
+    
     $response = httpRequest("POST", $gitlabApiRequest, [
         'form_params' => $postData
     ]);
 
-    if(!is_string($response)) {
-        $responseText = $response->getBody();
-    }
-    else {
-        $responseText = $response;
-    }
-
-    addLog("Creating gitlab project:\nRequest: ".$gitlabApiRequest."\nPOST data:\n".print_r($postData, true)."\nResponse: ".$responseText);
-
-    return $responseText;
+    $ar = new ApiResponse($response['code'], $response['body']);
+    return $ar->toJSON();
 }
 
-function deleteGitlabProject() {
+function deleteGitlabProject($projectId) {
     global $gitlabAddress, $gitlabAccessToken;
 
-    $postData = json_decode($_POST['data']);
-
     $gitlabUsername = getGitLabUsername($_SESSION['email']);
-    $gitlabApiRequest = $gitlabAddress."/api/v4/projects/".$postData->projectId."?private_token=".$gitlabAccessToken;
+    $gitlabApiRequest = $gitlabAddress."/api/v4/projects/".$projectId."?private_token=".$gitlabAccessToken;
     
     $response = httpRequest("DELETE", $gitlabApiRequest);
 
-    if(!is_string($response)) {
-        $responseText = $response->getBody();
-    }
-    else {
-        $responseText = $response;
-    }
-
-    addLog("Deleting gitlab project:\nRequest: ".$gitlabApiRequest."\nPOST data:\n".print_r($postData, true)."\nResponse: ".$responseText);
-
-    return $responseText;
+    $ar = new ApiResponse($response['code'], $response['body']);
+    return $ar->toJSON();
 }
 
-/*
-function getGitlabUserImpersonationToken($impersonation_token_id) {
-    global $gitlabAddress, $gitlabAccessToken, $gitlabUser;
-
-    $gitlabUsername = getGitLabUsername($_SESSION['email']);
-
-    $gitlabApiRequest = $gitlabAddress."/api/v4/users/".$_SESSION['gitlabUser']->id."/impersonation_tokens/".$impersonation_token_id."?private_token=".$gitlabAccessToken;
-    $data = file_get_contents($gitlabApiRequest);
-    addLog("Getting gitlab user impersonation token:\nRequest: ".$gitlabApiRequest."\nResponse: ".$data);
-
-    return json_encode($data);
-}
-
-function getAllGitlabUserImpersonationTokens() {
-    global $gitlabAddress, $gitlabAccessToken, $gitlabUser;
-
-    $gitlabUsername = getGitLabUsername($_SESSION['email']);
-
-    $gitlabApiRequest = $gitlabAddress."/api/v4/users/".$_SESSION['gitlabUser']->id."/impersonation_tokens?private_token=".$gitlabAccessToken;
-    $data = file_get_contents($gitlabApiRequest);
-    addLog("Getting all gitlab user impersonation tokens:\nRequest: ".$gitlabApiRequest."\nResponse: ".$data);
-
-    return $data;
-}
-
-function createGitlabUserImpersonationToken() {
-    global $gitlabAddress, $gitlabAccessToken, $gitlabUser;
-
-    $gitlabUsername = getGitLabUsername($_SESSION['email']);
-
-    $gitlabApiRequest = $gitlabAddress."/api/v4/users/".$_SESSION['gitlabUser']->id."/impersonation_tokens?private_token=".$gitlabAccessToken."&name=".$gitlabUsername."-impersonation-token&user_id=".$_SESSION['gitlabUser']->id."&scopes[]=api";
-    //scopes[]=api
-    
-    
-    $httpClient = new GuzzleHttp\Client();
-
-    try {
-        $response = $httpClient->request('POST', $gitlabApiRequest);
-    }
-    catch(Exception $e) {
-        return $e;
-    }
-
-    addLog("Creating gitlab user impersonation token:\nRequest: ".$gitlabApiRequest."\nPOST data:\n".print_r($postData, true)."\nResponse: ".$response->getBody()->getContents());
-
-    if($response->getStatusCode() == 200) {
-        
-    }
-
-    return $response->getBody()->getContents();
-}
-*/
-//curl -d "email=whatevs@umu.se&name=User One&username=user1&force_random_password=1&reset_password=false" http://gitlab:80/api/v4/users?private_token=
-
-//curl http://gitlab:80/api/v4/users?username=johan.von.boer&private_token=
-
-//Gitlab username: johan.von.boer_at_umu.se
 
 ?>

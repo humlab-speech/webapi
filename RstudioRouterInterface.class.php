@@ -12,18 +12,7 @@ class RStudioRouterInterface {
     * This is really just acts as proxy towards the rstudio-router API.
     */
     function getSessions() {
-        /*
-        $httpClient = new GuzzleHttp\Client();
-        $rstudioRouterApiRequest = "http://rstudio-router:80/api/sessions";
-        try {
-            $rstudioSessions = $httpClient->request('GET', $rstudioRouterApiRequest);
-        }
-        catch(Exception $e) {
-            //addLog("Creating gitlab project:\nRequest: ".$gitlabApiRequest."\nPOST data:\n".print_r($postData, true)."\nResponse: ".$response);
-            return $e;
-        }
-        */
-
+        
         $rstudioRouterApiRequest = "http://rstudio-router:80/api/sessions";
         $rstudioSessions = httpRequest("GET", $rstudioRouterApiRequest);
 
