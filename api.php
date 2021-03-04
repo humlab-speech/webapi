@@ -23,6 +23,33 @@ class Application {
         $this->sessionManagerInterface = new SessionManagerInterface($this, $hsApiAccessToken);
     }
 
+    /*
+    function parseUrl($url) {
+        $path = parse_url($url, PHP_URL_PATH);
+        $components = explode("/", $path);
+        array_shift($components);
+        if($components[0] != "api") {
+            //This was not for us??
+            $this->addLog("Received request not starting with expected 'api' component", "error");
+            return [];
+        }
+        array_shift($components);
+        if($components[0] != "v1") {
+            //There are other versions??
+            $this->addLog("Received API request with version other than 1", "error");
+            return [];
+        }
+        array_shift($components);
+
+        return $components;
+    }
+
+    $pattern = "POST /session/:appname";
+    function matchRestPattern($pattern, $urlComponents) {
+
+    }
+    */
+
     function route() {
         if(empty($_SESSION['authorized']) || $_SESSION['authorized'] !== true) {
             //if user has not passed a valid authentication, don't allow access to this API
@@ -47,6 +74,7 @@ class Application {
                 break;
                 case "/api/v1/session":
                     $this->addLog("GET: /api/v1/session");
+                    $this->addLog("cwd: ".getcwd());
                     $out = $this->getUserSessionAttributes();
                 break;
                 case "/api/v1/user/project":
@@ -90,6 +118,17 @@ class Application {
                     $this->addLog("POST: /api/v1/rstudio/session/please");
                     if($this->userHasProjectAuthorization($postData->projectId)) {
                         $ar = $this->sessionManagerInterface->fetchSession($postData->projectId, "rstudio");
+                        $out = $ar->toJSON();
+                    }
+                    else {
+                        $ar = new ApiResponse(401, array('message' => 'This user does not have access to that project.'));
+                        $out = $ar->toJSON();
+                    }
+                break;
+                case "/api/v1/jupyter/session/please":
+                    $this->addLog("POST: /api/v1/jupyter/session/please");
+                    if($this->userHasProjectAuthorization($postData->projectId)) {
+                        $ar = $this->sessionManagerInterface->fetchSession($postData->projectId, "jupyter");
                         $out = $ar->toJSON();
                     }
                     else {
@@ -551,7 +590,9 @@ class Application {
     
                 $uploadsVolume = array(
                     //'source' => "/tmp/uploads/".$_SESSION['gitlabUser']->id."/".$postData->context,
-                    'source' => "/home/johan/humlab-speech-deployment/mounts/edge-router/apache/uploads/".$_SESSION['gitlabUser']->id."/".$postData->context,
+                    //'source' => "/home/johan/humlab-speech-deployment/mounts/edge-router/apache/uploads/".$_SESSION['gitlabUser']->id."/".$postData->context,
+                    //'source' => getcwd()."/mounts/edge-router/apache/uploads/".$_SESSION['gitlabUser']->id."/".$postData->context,
+                    'source' => getenv("UPLOAD_PATH")."/".$_SESSION['gitlabUser']->id."/".$postData->context,
                     'target' => '/home/rstudio/uploads'
                 );
                 

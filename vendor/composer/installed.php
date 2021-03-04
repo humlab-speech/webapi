@@ -6,7 +6,7 @@
     'aliases' => 
     array (
     ),
-    'reference' => 'b3993c3f7d02783b84b006ee9e8625682dc77df7',
+    'reference' => '7773701ded310904f00c463bb1d770be3e99ef9f',
     'name' => '__root__',
   ),
   'versions' => 
@@ -18,7 +18,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => 'b3993c3f7d02783b84b006ee9e8625682dc77df7',
+      'reference' => '7773701ded310904f00c463bb1d770be3e99ef9f',
     ),
     'guzzlehttp/guzzle' => 
     array (
@@ -46,6 +46,15 @@
       array (
       ),
       'reference' => '53330f47520498c0ae1f61f7e2c90f55690c06a3',
+    ),
+    'mongodb/mongodb' => 
+    array (
+      'pretty_version' => '1.5.2',
+      'version' => '1.5.2.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => '9480f994de9f70e2ae5a946b21e6fc04bf5a6c3c',
     ),
     'psr/http-client' => 
     array (

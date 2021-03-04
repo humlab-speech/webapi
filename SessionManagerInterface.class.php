@@ -5,7 +5,9 @@ use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\ClientException;
 
 class SessionManagerInterface {
-    private $sessionManagerDnsName = "session-manager-dev";
+    private $sessionManagerDnsName = "session-manager";
+    private $sessionManagerApiEndpoint = "http://session-manager:8080/api";
+    
     function __construct($app, $hsApiAccessToken) {
         $this->app = $app;
         $this->hsApiAccessToken = $hsApiAccessToken;
@@ -16,7 +18,7 @@ class SessionManagerInterface {
     */
     function getSessions() {
         $this->app->addLog("Call: getSessions()", "debug");
-        $sessionManagerApiRequest = "http://".$this->sessionManagerDnsName.":80/api/sessions/".$_SESSION['gitlabUser']->id;
+        $sessionManagerApiRequest = $this->sessionManagerApiEndpoint."/sessions/".$_SESSION['gitlabUser']->id;
         $appSessions = $this->app->httpRequest("GET", $sessionManagerApiRequest, ['headers' => ['hs_api_access_token' => $this->hsApiAccessToken]]);
         /*
         $this->app->addLog("here goes the cold water...");
@@ -64,7 +66,7 @@ class SessionManagerInterface {
             return false;
         }
 
-        $sessionManagerApiRequest = "http://".$this->sessionManagerDnsName.":80/api/session/new/user";
+        $sessionManagerApiRequest = $this->sessionManagerApiEndpoint."/session/new/user";
         $options = [
             'headers' => ['hs_api_access_token' => $this->hsApiAccessToken],
             'form_params' => [
@@ -104,7 +106,7 @@ class SessionManagerInterface {
             $hsAppSessionId = $_COOKIE[$hsApp.'Session'];
         }
 
-        $sessionManagerApiRequest = "http://".$this->sessionManagerDnsName.":80/api/session/user";
+        $sessionManagerApiRequest = $this->sessionManagerApiEndpoint."/session/user";
         $options = [
             'headers' => ['hs_api_access_token' => $this->hsApiAccessToken],
             'form_params' => [
@@ -127,7 +129,7 @@ class SessionManagerInterface {
      */
     function runCommandInSession($appSessionId, $cmd = []) {
         $this->app->addLog("runCommandInSession:".print_r($cmd, true), "debug");
-        $sessionManagerApiRequest = "http://".$this->sessionManagerDnsName.":80/api/session/run";
+        $sessionManagerApiRequest = $this->sessionManagerApiEndpoint."/session/run";
         if(!is_array($cmd)) {
             $cmd = [$cmd];
         }
@@ -147,14 +149,14 @@ class SessionManagerInterface {
     function commitSession($appSessionId) {
         $this->app->addLog("Call: commitSession(".$appSessionId.")", "debug");
 
-        $sessionManagerApiRequest = "http://".$this->sessionManagerDnsName.":80/api/session/".$appSessionId."/commit";
+        $sessionManagerApiRequest = $this->sessionManagerApiEndpoint."/session/".$appSessionId."/commit";
         $response = $this->app->httpRequest("GET", $sessionManagerApiRequest, ['headers' => ['hs_api_access_token' => $this->hsApiAccessToken]]);
         return $response["body"];
     }
 
     function delSession($appSessionId) {
         $this->app->addLog("Call: delSession(".$appSessionId.")", "debug");
-        $sessionManagerApiRequest = "http://".$this->sessionManagerDnsName.":80/api/session/".$appSessionId."/delete";
+        $sessionManagerApiRequest = $this->sessionManagerApiEndpoint."/session/".$appSessionId."/delete";
         $response = $this->app->httpRequest("GET", $sessionManagerApiRequest, ['headers' => ['hs_api_access_token' => $this->hsApiAccessToken]]);
         return $response["body"];
     }
