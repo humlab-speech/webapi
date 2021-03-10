@@ -1,5 +1,5 @@
 <?php
-$domain = getenv("HIRD_DOMAIN_NAME");
+$domain = getenv("HS_DOMAIN_NAME");
 session_set_cookie_params(60*60*8, "/", ".".$domain);
 session_start();
 $_SESSION['projectName'] = getenv("PROJECT_NAME");
