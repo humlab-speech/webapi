@@ -127,19 +127,36 @@ class SessionManagerInterface {
      * @param $appSessionId
      * @param $cmd - A command to be run specified as an array, like: ["ls", "-l"]
      */
-    function runCommandInSession($appSessionId, $cmd = []) {
+    function runCommandInSession($appSessionId, $cmd = [], $env = []) {
         $this->app->addLog("runCommandInSession:".print_r($cmd, true), "debug");
         $sessionManagerApiRequest = $this->sessionManagerApiEndpoint."/session/run";
         if(!is_array($cmd)) {
             $cmd = [$cmd];
         }
+
+        
+        if(!empty($env)) {
+            $envStringList = "[";
+            foreach($env as $key => $value) {
+                $envStringList .= "\"".$key."=".$value."\",";
+            }
+            $envStringList = substr($envStringList, 0, strlen($envStringList)-1); //Remove last comma
+            $envStringList .= "]";
+        }
+        else {
+            $envStringList = "[]";
+        }
+
         $options = [
             'headers' => ['hs_api_access_token' => $this->hsApiAccessToken],
             'form_params' => [
                 'appSession' => $appSessionId,
+                'env' => $envStringList,
                 'cmd' => json_encode($cmd)
             ]
         ];
+
+        $this->app->addLog("envStringList: ".$envStringList, "debug");
 
         $response = $this->app->httpRequest("POST", $sessionManagerApiRequest, $options);
         $this->app->addLog("runCommandInSession result:".print_r($response, true), "debug");
