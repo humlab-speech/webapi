@@ -357,6 +357,11 @@ class Application {
     }
     
     function getUserSessionAttributes() {
+
+        if(empty($_SESSIN['gitlabUser'])) {
+            $this->getGitlabUser();
+        }
+
         //If we don't have a PAT yet, fetch it now
         if(empty($_SESSION['personalAccessToken'])) {
             $response = $this->createPersonalAccessToken();
@@ -523,7 +528,6 @@ class Application {
     function getGitlabUserProjects() {
         global $gitlabAddress, $hsApiAccessToken;
         
-    
         if(empty($_SESSION['gitlabUser'])) {
             $this->getGitlabUser();
         }
