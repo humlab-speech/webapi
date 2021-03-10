@@ -302,7 +302,9 @@ class Application {
         $fileBinary = base64_decode($fileDataWithoutMime, true);
         $this->addLog("File size of ".$fileName." is ".strlen($fileBinary)." bytes");
 
-        $targetDir = "/tmp/uploads/".$_SESSION['gitlabUser']->id."/".$data->context."/".$sessionName;
+        $targetDir = getenv("UPLOAD_PATH")."/".$_SESSION['gitlabUser']->id."/".$data->context."/".$sessionName;
+        //$targetDir = "/tmp/uploads/".$_SESSION['gitlabUser']->id."/".$data->context."/".$sessionName;
+        
         if(!is_dir($targetDir)) {
             mkdir($targetDir, 0777, true);
         }
