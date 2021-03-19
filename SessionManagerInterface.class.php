@@ -80,8 +80,6 @@ class SessionManagerInterface {
         $this->app->addLog("Will request:".$sessionManagerApiRequest, "debug");
         $response = $this->app->httpRequest("POST", $sessionManagerApiRequest, $options);
 
-
-
         return new ApiResponse($response['code'], $response['body']);
     }
 
@@ -165,7 +163,6 @@ class SessionManagerInterface {
 
     function commitSession($appSessionId) {
         $this->app->addLog("Call: commitSession(".$appSessionId.")", "debug");
-
         $sessionManagerApiRequest = $this->sessionManagerApiEndpoint."/session/".$appSessionId."/commit";
         $response = $this->app->httpRequest("GET", $sessionManagerApiRequest, ['headers' => ['hs_api_access_token' => $this->hsApiAccessToken]]);
         return $response["body"];

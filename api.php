@@ -113,7 +113,7 @@ class Application {
                 case "/api/v1/user/project":
                     $this->addLog("POST: /api/v1/user/project");
                     //TODO: Perhaps verify that this user has the right to create a new project?
-                    $out = $this->createGitlabProject();
+                    $out = $this->createProject($postData);
                 break;
                 case "/api/v1/rstudio/session/please":
                     $this->addLog("POST: /api/v1/rstudio/session/please");
@@ -148,6 +148,20 @@ class Application {
                         $out = $ar->toJSON();
                     }
                 break;
+                case "/api/v1/session/save":
+                    $this->addLog("POST: /api/v1/session/save");
+                    if($this->userHasProjectAuthorization($postData->projectId)) {
+                        $out = $this->sessionManagerInterface->commitSession($postData->sessionId);
+                    }
+                break;
+                case "/api/v1/session/close":
+                    $this->addLog("POST: /api/v1/session/close");
+                    if($this->userHasProjectAuthorization($postData->projectId)) {
+                        $out = $this->sessionManagerInterface->delSession($postData->sessionId);
+                    }
+                break;
+
+                /*
                 case "/api/v1/rstudio/save":
                     $this->addLog("POST: /api/v1/rstudio/save");
                     if($this->userHasProjectAuthorization($postData->projectId)) {
@@ -156,10 +170,12 @@ class Application {
                 break;
                 case "/api/v1/rstudio/close":
                     $this->addLog("POST: /api/v1/rstudio/close");
+                    $this->addLog(print_r($postData, true));
                     if($this->userHasProjectAuthorization($postData->projectId)) {
                         $out = $this->sessionManagerInterface->delSession($postData->rstudioSession);
                     }
                 break;
+                */
                 case "/api/v1/user/project/delete":
                     $this->addLog("POST: /api/v1/user/project/delete");
                     if($this->userHasProjectAuthorization($postData->projectId)) {
@@ -177,7 +193,7 @@ class Application {
 
     function httpRequest($method = "GET", $url, $options = []) {
         $this->addLog("Http Request: ".$method." ".$url);
-        $this->addLog(print_r($options, true), "debug");
+        //$this->addLog(print_r($options, true), "debug");
         $httpClient = new GuzzleHttp\Client();
     
         $exception = false;
@@ -302,11 +318,14 @@ class Application {
         $fileBinary = base64_decode($fileDataWithoutMime, true);
         $this->addLog("File size of ".$fileName." is ".strlen($fileBinary)." bytes");
 
-        $targetDir = getenv("UPLOAD_PATH")."/".$_SESSION['gitlabUser']->id."/".$data->context."/".$sessionName;
-        //$targetDir = "/tmp/uploads/".$_SESSION['gitlabUser']->id."/".$data->context."/".$sessionName;
+        $targetDir = "/tmp/uploads/".$_SESSION['gitlabUser']->id."/".$data->context."/".$sessionName;
+
+        $this->addLog("File destination: ".$targetDir);
         
         if(!is_dir($targetDir)) {
-            mkdir($targetDir, 0777, true);
+            if(mkdir($targetDir, 0777, true)) {
+                $this->addLog("Failed creating upload destination! : ".$targetDir, "error");
+            }
         }
         file_put_contents($targetDir."/".$fileName, $fileBinary);
 
@@ -418,8 +437,14 @@ class Application {
     }
 
     function deleteAllPersonalAccessTokens($onlySystemTokens = true) {
+        $this->addLog("deleteAllPersonalAccessTokens");
         $ar = $this->fetchPersonalAccessTokens();
+        if($ar->code != 200) {
+            $this->addLog("Not deleting personal access tokens, because return code on fetching list of tokens was ".$ar->code);
+            return false;
+        }
         $tokenList = json_decode($ar->body);
+        $this->addLog(print_r($tokenList, true));
         $responses = [];
         foreach($tokenList as $token) {
             if(($onlySystemTokens && $token->name == "Humlab Speech System Token") || $onlySystemTokens === false) {
@@ -566,16 +591,98 @@ class Application {
         
         return $ar->toJSON();
     }
-    
-    function createGitlabProject() {
+
+    function createProject($postData) {
         global $gitlabAddress, $gitlabAccessToken, $appRouterInterface;
-        
-        $gitlabApiRequest = $gitlabAddress."/api/v4/projects/user/".$_SESSION['gitlabUser']->id."?private_token=".$gitlabAccessToken;
-        
-        $postData = json_decode($_POST['data']);
+
         $form = $postData->form;
         $createProjectContextId = $postData->context;
+
+        $response = $this->createGitlabProject($postData);
+        if($response['code'] != 201) { //HTTP 201 == CREATED
+            $this->addLog("Failed creating Gitlab project", "error");
+            return false;
+        }
+
+        $this->addLog("Create project emuDB trace START:");
+        //1. Spawn a new rstudio-container & Git clone project into container (automatic)
+        $project = json_decode($response['body']);
+        $this->addLog("Project: ".print_r($project, true), "debug");
+        array_push($_SESSION['gitlabProjects'], $project);
+        
+        $uploadsVolume = array(
+            'source' => getenv("ABS_ROOT_PATH")."/mounts/edge-router/apache/uploads/".$_SESSION['gitlabUser']->id."/".$createProjectContextId,
+            'target' => '/home/uploads'
+        );
+
+        $projectDirectoryTemplateVolume = array(
+            'source' => getenv("ABS_ROOT_PATH")."/docker/session-manager/project-template-structure",
+            'target' => "/project-template-structure"
+        );
+        
+        $volumes = array();
+        $volumes []= $uploadsVolume;
+        $volumes []= $projectDirectoryTemplateVolume;
+
+        $this->addLog("Launching container to create project");
+        $rstudioSessionResponse = $this->sessionManagerInterface->createSession($project->id, "rstudio", $volumes);
+        $this->addLog("rstudioSessionResponse: ".print_r($rstudioSessionResponse, true), "debug");
+        $rstudioSessionResponseDecoded = json_decode($rstudioSessionResponse->body);
+        $rstudioSessionId = $rstudioSessionResponseDecoded->sessionAccessCode;
+        $this->addLog("rstudioSessionId: ".$rstudioSessionId, "debug");
+        
+        $this->addLog("Creating project directory structure");
+        //$cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, ["bash", "-c", "\"cp -R /project-template-structure/* /home/rstudio/\""]);
+
+        $envVars = ["PROJECT_PATH" => "/home/project-setup"];
+
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, ["/usr/bin/bash", "/scripts/copy-template-directory-structure.sh"], $envVars);
+
+        //2. Generate a new empty emu-db in container git dir
+        $this->addLog("Creating emuDB in project");
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, ["/usr/local/bin/R", "-f", "/scripts/createEmuDb.r"], $envVars);
+        $this->addLog($cmdOutput);
+
+        //Just about here we want to include any uploaded files
+        $this->addLog("Importing wav files into project");
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, ["/usr/local/bin/R", "-f", "/scripts/importWavFiles.r"], $envVars);
+
+        //Create a generic bundle-list for all bundles
+        $this->addLog("Creating bundle lists");
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, ["/usr/local/bin/R", "-f", "/scripts/createBundleList.r"], $envVars);
+        
+        //$this->addLog("postData: ".print_r($postData, true), "desbug");
+
+        $this->addLog("Creating and linking annotation levels");
+        $this->createAnnotLevelsInSession($rstudioSessionId, $form);
+        
+        //$cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, ["/usr/bin/bash", "-c", "mkdir -p /home/rstudio/humlabspeech"]);
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, ["/usr/bin/bash", "-c", "cp -R ".$envVars["PROJECT_PATH"]."/* /home/rstudio/humlabspeech/"]);
+
+        //3. Commit & push
+        $this->addLog("Committing project");
+        $cmdOutput = $this->sessionManagerInterface->commitSession($rstudioSessionId);
+        //addLog("commit-cmd-output: ".print_r($cmdOutput, true), "debug");
+        //4. Shutdown container
+        
+        $this->addLog("Shutting down project creation container");
+        $cmdOutput = $this->sessionManagerInterface->delSession($rstudioSessionId);
+        
+        //addLog("session-del-cmd-output: ".print_r($cmdOutput, true), "debug");
+
+        $ar = new ApiResponse($response['code'], $response['body']);
+
+        return $ar->toJSON();
+    }
     
+    function createGitlabProject($postData) {
+        global $gitlabAddress, $gitlabAccessToken, $appRouterInterface;
+        
+        $form = $postData->form;
+        $createProjectContextId = $postData->context;
+
+        $gitlabApiRequest = $gitlabAddress."/api/v4/projects/user/".$_SESSION['gitlabUser']->id."?private_token=".$gitlabAccessToken;
+        
         $this->addLog("Creating new GitLab project:".print_r($postData, true));
 
         $response = $this->httpRequest("POST", $gitlabApiRequest, [
@@ -585,58 +692,8 @@ class Application {
         ]);
     
         $this->addLog("Gitlab project create response: ".print_r($response, true), "debug");
-    
-        if($response['code'] == 201) { //HTTP 201 == CREATED
-            $this->addLog("Create project emuDB trace START:");
-            //1. Spawn a new rstudio-container & Git clone project into container (automatic)
-            $project = json_decode($response['body']);
-            //addLog("Project: ".print_r($project, true), "debug");
-            
-            $this->addLog("Session projects num: ".count($_SESSION['gitlabProjects']), "debug");
 
-            array_push($_SESSION['gitlabProjects'], $project);
-            
-            $this->addLog("Session projects num: ".count($_SESSION['gitlabProjects']), "debug");
-
-            $uploadsVolume = array(
-                'source' => getenv("UPLOAD_PATH")."/".$_SESSION['gitlabUser']->id."/".$createProjectContextId,
-                'target' => '/home/rstudio/uploads'
-            );
-            
-            $volumes = [$uploadsVolume['source'] => $uploadsVolume['target']];
-
-            $rstudioSessionResponse = $this->sessionManagerInterface->createSession($project->id, "rstudio", $volumes);
-            $this->addLog("rstudioSessionResponse: ".print_r($rstudioSessionResponse, true), "debug");
-            $rstudioSessionResponseDecoded = json_decode($rstudioSessionResponse->body);
-            $rstudioSessionId = $rstudioSessionResponseDecoded->sessionAccessCode;
-            $this->addLog("rstudioSessionId: ".$rstudioSessionId, "debug");
-            
-            //2. Generate a new empty emu-db in container git dir
-            $cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, ["/usr/local/bin/R", "-f", "/rscripts/createEmuDb.r"]);
-
-            //Just about here we want to include any uploaded files
-            $cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, ["/usr/local/bin/R", "-f", "/rscripts/importWavFiles.r"]);
-
-            //Create a generic bundle-list for all bundles
-            $cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, ["/usr/local/bin/R", "-f", "/rscripts/createBundleList.r"]);
-            
-            //$this->addLog("postData: ".print_r($postData, true), "desbug");
-
-            $this->createAnnotLevelsInSession($rstudioSessionId, $form);
-            
-            $cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, ["/usr/bin/bash", "-c", "cp -R /home/rstudio/humlabspeech_emuDB/* /home/rstudio/humlabspeech/"]);
-
-            //3. Commit & push
-            $cmdOutput = $this->sessionManagerInterface->commitSession($rstudioSessionId);
-            //addLog("commit-cmd-output: ".print_r($cmdOutput, true), "debug");
-            //4. Shutdown container
-            $cmdOutput = $this->sessionManagerInterface->delSession($rstudioSessionId);
-            //addLog("session-del-cmd-output: ".print_r($cmdOutput, true), "debug");
-                
-        }
-    
-        $ar = new ApiResponse($response['code'], $response['body']);
-        return $ar->toJSON();
+        return $response;
     }
 
     /**
@@ -644,25 +701,23 @@ class Application {
      * 
      * Create annotation levels in emuDB
      */
-    function createAnnotLevelsInSession($rstudioSessionId, $form) {
+    function createAnnotLevelsInSession($rstudioSessionId, $form, $env = []) {
         //Create annoation levels
         foreach($form->annotLevels as $annotLevel) {
             $cmd = ["/usr/local/bin/R", "-f", "/rscripts/addAnnotationLevelDefinition.r"];
-            $env = [
-                "ANNOT_LEVEL_DEF_NAME" => $annotLevel->name,
-                "ANNOT_LEVEL_DEF_TYPE" => $annotLevel->type
-            ];
+            $env["ANNOT_LEVEL_DEF_NAME"] = $annotLevel->name;
+            $env["ANNOT_LEVEL_DEF_TYPE"] = $annotLevel->type;
+
             $cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, $cmd, $env);
         }
 
         //Create the links between annotation levels
         foreach($form->annotLevelLinks as $annotLevelLink) {
             $cmd = ["/usr/local/bin/R", "-f", "/rscripts/addAnnotationLevelLinkDefinition.r"];
-            $env = [
-                "ANNOT_LEVEL_LINK_SUPER" => $annotLevelLink->superLevel,
-                "ANNOT_LEVEL_LINK_SUB" => $annotLevelLink->subLevel,
-                "ANNOT_LEVEL_LINK_DEF_TYPE" => $annotLevelLink->type
-            ];
+            $env["ANNOT_LEVEL_LINK_SUPER"] = $annotLevelLink->superLevel;
+            $env["ANNOT_LEVEL_LINK_SUB"] = $annotLevelLink->subLevel;
+            $env["ANNOT_LEVEL_LINK_DEF_TYPE"] = $annotLevelLink->type;
+
             $cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, $cmd, $env);
         }
     }
