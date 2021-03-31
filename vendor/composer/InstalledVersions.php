@@ -29,7 +29,7 @@ private static $installed = array (
     'aliases' => 
     array (
     ),
-    'reference' => '623987e702b82126a283097362e52f687b0b529e',
+    'reference' => 'ad1965ea3ce337ba0b893834ed555237ca0c9cb9',
     'name' => '__root__',
   ),
   'versions' => 
@@ -41,7 +41,7 @@ private static $installed = array (
       'aliases' => 
       array (
       ),
-      'reference' => '623987e702b82126a283097362e52f687b0b529e',
+      'reference' => 'ad1965ea3ce337ba0b893834ed555237ca0c9cb9',
     ),
     'cboden/ratchet' => 
     array (
@@ -87,6 +87,15 @@ private static $installed = array (
       array (
       ),
       'reference' => '53330f47520498c0ae1f61f7e2c90f55690c06a3',
+    ),
+    'mongodb/mongodb' => 
+    array (
+      'pretty_version' => '1.5.2',
+      'version' => '1.5.2.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => '9480f994de9f70e2ae5a946b21e6fc04bf5a6c3c',
     ),
     'psr/http-client' => 
     array (

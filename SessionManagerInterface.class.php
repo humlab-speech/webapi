@@ -14,24 +14,18 @@ class SessionManagerInterface {
     }
 
     /** 
-    * Function: getSessions
+    * Function: _getSessions
     */
-    function getSessions() {
-        $this->app->addLog("Call: getSessions()", "debug");
+    function _getSessions() {
+        $this->app->addLog("Call: _getSessions()", "debug");
         $sessionManagerApiRequest = $this->sessionManagerApiEndpoint."/sessions/".$_SESSION['gitlabUser']->id;
         $appSessions = $this->app->httpRequest("GET", $sessionManagerApiRequest, ['headers' => ['hs_api_access_token' => $this->hsApiAccessToken]]);
-        /*
-        $this->app->addLog("here goes the cold water...");
-        $this->app->addLog(print_r($appSessions, true), "debug");
-        $this->app->addLog(print_r(json_decode($appSessions), true), "debug");
-        */
         return json_decode($appSessions['body']);
-        
     }
 
-    function fetchGitlabProjectById($projectId) {
+    function _fetchGitlabProjectById($projectId) {
         global $gitlabApiRequest, $gitlabAddress, $gitlabAccessToken;
-        $this->app->addLog("Call: fetchGitlabProjectById(".$projectId.")", "debug");
+        $this->app->addLog("Call: _fetchGitlabProjectById(".$projectId.")", "debug");
         $gitlabApiRequest = $gitlabAddress."/api/v4/projects/".$projectId."?private_token=".$gitlabAccessToken;
         return $this->app->httpRequest("GET", $gitlabApiRequest, ['headers' => ['hs_api_access_token' => $this->hsApiAccessToken]]);
     }
@@ -39,6 +33,7 @@ class SessionManagerInterface {
     /**
      * This function should probably be in the parent
      */
+    /*
     function getGitlabProjectById($projectId) {
         $this->app->addLog("Call: getGitlabProjectById(".$projectId.")", "debug");
         foreach($_SESSION['gitlabProjects'] as $key => $proj) {
@@ -48,6 +43,7 @@ class SessionManagerInterface {
         }
         return false;
     }
+    */
 
 
     /**
@@ -57,7 +53,7 @@ class SessionManagerInterface {
      */
     function createSession($projectId, $hsApp = "rstudio", $volumes = []) {
         $this->app->addLog("Call: createSession(".$projectId.", ".$hsApp.")", "debug");
-        $response = $this->fetchGitlabProjectById($projectId);
+        $response = $this->_fetchGitlabProjectById($projectId);
         $project = $response['body'];
         
         if($project === false) {
@@ -89,9 +85,8 @@ class SessionManagerInterface {
      */
     function fetchSession($projectId, $hsApp = "rstudio") {
         $this->app->addLog("Call: getSession(".$projectId.", ".$hsApp.")", "debug");
-        $response = $this->fetchGitlabProjectById($projectId);
+        $response = $this->_fetchGitlabProjectById($projectId);
         $project = $response['body'];
-        //$project = $this->getGitlabProjectById($projectId);
         
         if($project === false) {
             //No such project!
@@ -158,21 +153,21 @@ class SessionManagerInterface {
 
         $response = $this->app->httpRequest("POST", $sessionManagerApiRequest, $options);
         $this->app->addLog("runCommandInSession result:".print_r($response, true), "debug");
-        return $response;
+        return new ApiResponse(200, $response);
     }
 
     function commitSession($appSessionId) {
         $this->app->addLog("Call: commitSession(".$appSessionId.")", "debug");
         $sessionManagerApiRequest = $this->sessionManagerApiEndpoint."/session/".$appSessionId."/commit";
         $response = $this->app->httpRequest("GET", $sessionManagerApiRequest, ['headers' => ['hs_api_access_token' => $this->hsApiAccessToken]]);
-        return $response["body"];
+        return new ApiResponse(200, $response['body']);
     }
 
     function delSession($appSessionId) {
         $this->app->addLog("Call: delSession(".$appSessionId.")", "debug");
         $sessionManagerApiRequest = $this->sessionManagerApiEndpoint."/session/".$appSessionId."/delete";
         $response = $this->app->httpRequest("GET", $sessionManagerApiRequest, ['headers' => ['hs_api_access_token' => $this->hsApiAccessToken]]);
-        return $response["body"];
+        return new ApiResponse(200, $response['body']);
     }
 }
 

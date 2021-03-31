@@ -6,6 +6,7 @@ require_once 'ApiResponse.class.php';
 use GuzzleHttp\Psr7;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\ClientException;
+use MongoDB\Client;
 
 
 $domain = getenv("HS_DOMAIN_NAME");
@@ -24,38 +25,11 @@ class Application {
         $this->sessionManagerInterface = new SessionManagerInterface($this, $hsApiAccessToken);
     }
 
-    /*
-    function parseUrl($url) {
-        $path = parse_url($url, PHP_URL_PATH);
-        $components = explode("/", $path);
-        array_shift($components);
-        if($components[0] != "api") {
-            //This was not for us??
-            $this->addLog("Received request not starting with expected 'api' component", "error");
-            return [];
-        }
-        array_shift($components);
-        if($components[0] != "v1") {
-            //There are other versions??
-            $this->addLog("Received API request with version other than 1", "error");
-            return [];
-        }
-        array_shift($components);
-
-        return $components;
-    }
-
-    $pattern = "POST /session/:appname";
-    function matchRestPattern($pattern, $urlComponents) {
-
-    }
-    */
-
     function route() {
         if(empty($_SESSION['authorized']) || $_SESSION['authorized'] !== true) {
             //if user has not passed a valid authentication, don't allow access to this API
             $this->addLog("User not signed in - Authorization required");
-            $ar= new ApiResponse(401, "Authorization required");
+            $ar = new ApiResponse(401, "Authorization required");
             echo $ar->toJSON();
             exit();
         }
@@ -65,29 +39,32 @@ class Application {
         
         if($reqMethod == "GET") {
             switch($reqPath) {
-                case "/api/v1/magick":
-                    $this->addLog("GET: /api/v1/magick");
-                    $out = $this->dumpServerVariables();
+                case "/api/v1/personalaccesstoken":
+                    $this->addLog("GET: /api/v1/personalaccesstoken");
+                    $apiResponse = $this->getPersonalAccessToken();
                 break;
                 case "/api/v1/user":
                     $this->addLog("GET: /api/v1/user");
-                    $out = $this->getGitlabUser();
+                    $apiResponse = $this->getGitlabUser();
                 break;
                 case "/api/v1/session":
                     $this->addLog("GET: /api/v1/session");
                     $this->addLog("cwd: ".getcwd());
-                    $out = $this->getUserSessionAttributes();
+                    $apiResponse = $this->getUserSessionAttributes();
                 break;
                 case "/api/v1/user/project":
                     $this->addLog("GET: /api/v1/user/project");
-                    $out = $this->getGitlabUserProjects();
+                    $apiResponse = $this->getGitlabUserProjects();
                 break;
                 case "/api/v1/signout":
                     $this->addLog("GET: /api/v1/signout");
-                    $this->signOut();
+                    $apiResponse = $this->signOut();
                 break;
             }
-            return $out;
+
+            if($apiResponse !== false) {
+                return $apiResponse->toJSON();
+            }
         }
         
         if($reqMethod == "POST") {
@@ -99,96 +76,102 @@ class Application {
             switch($reqPath) {
                 case "/api/v1/upload":
                     $this->addLog("POST: /api/v1/upload");
-                    $ar = $this->handleUpload();
-                    $out = $ar->toJSON();
+                    $apiResponse = $this->handleUpload();
                 break;
                 case "/api/v1/personalaccesstoken":
                     $this->addLog("POST: /api/v1/personalaccesstoken");
-                        $out = $this->createPersonalAccessToken();
+                    $apiResponse = $this->createPersonalAccessToken();
                 break;
                 case "/api/v1/user":
                     $this->addLog("POST: /api/v1/user");
-                    $out = $this->createGitlabUser();
+                    $apiResponse = $this->createGitlabUser();
                 break;
                 case "/api/v1/user/project":
                     $this->addLog("POST: /api/v1/user/project");
                     //TODO: Perhaps verify that this user has the right to create a new project?
-                    $out = $this->createProject($postData);
+                    $apiResponse = $this->createProject($postData);
                 break;
                 case "/api/v1/rstudio/session/please":
                     $this->addLog("POST: /api/v1/rstudio/session/please");
                     if($this->userHasProjectAuthorization($postData->projectId)) {
-                        $ar = $this->sessionManagerInterface->fetchSession($postData->projectId, "rstudio");
-                        $out = $ar->toJSON();
+                        $apiResponse = $this->sessionManagerInterface->fetchSession($postData->projectId, "rstudio");
                     }
                     else {
-                        $ar = new ApiResponse(401, array('message' => 'This user does not have access to that project.'));
-                        $out = $ar->toJSON();
+                        $apiResponse = new ApiResponse(401, array('message' => 'This user does not have access to that project.'));
                     }
                 break;
                 case "/api/v1/jupyter/session/please":
                     $this->addLog("POST: /api/v1/jupyter/session/please");
                     if($this->userHasProjectAuthorization($postData->projectId)) {
-                        $ar = $this->sessionManagerInterface->fetchSession($postData->projectId, "jupyter");
-                        $out = $ar->toJSON();
+                        $apiResponse = $this->sessionManagerInterface->fetchSession($postData->projectId, "jupyter");
                     }
                     else {
-                        $ar = new ApiResponse(401, array('message' => 'This user does not have access to that project.'));
-                        $out = $ar->toJSON();
+                        $apiResponse = new ApiResponse(401, array('message' => 'This user does not have access to that project.'));
                     }
                 break;
                 case "/api/v1/emuwebapp/session/please":
                     $this->addLog("POST: /api/v1/emuwebapp/session/please");
                     if($this->userHasProjectAuthorization($postData->projectId)) {
-                        $ar = new ApiResponse(200, array('personalAccessToken' => $_SESSION['personalAccessToken']));
-                        $out = $ar->toJSON();
+                        $apiResponse = new ApiResponse(200, array('personalAccessToken' => $_SESSION['personalAccessToken']));
                     }
                     else {
-                        $ar = new ApiResponse(401, array('message' => 'This user does not have access to that project.'));
-                        $out = $ar->toJSON();
+                        $apiResponse = new ApiResponse(401, array('message' => 'This user does not have access to that project.'));
                     }
                 break;
                 case "/api/v1/session/save":
                     $this->addLog("POST: /api/v1/session/save");
                     if($this->userHasProjectAuthorization($postData->projectId)) {
-                        $out = $this->sessionManagerInterface->commitSession($postData->sessionId);
+                        $apiResponse = $this->sessionManagerInterface->commitSession($postData->sessionId);
                     }
                 break;
                 case "/api/v1/session/close":
                     $this->addLog("POST: /api/v1/session/close");
                     if($this->userHasProjectAuthorization($postData->projectId)) {
-                        $out = $this->sessionManagerInterface->delSession($postData->sessionId);
+                        $apiResponse = $this->sessionManagerInterface->delSession($postData->sessionId);
                     }
                 break;
-
-                /*
-                case "/api/v1/rstudio/save":
-                    $this->addLog("POST: /api/v1/rstudio/save");
-                    if($this->userHasProjectAuthorization($postData->projectId)) {
-                        $out = $this->sessionManagerInterface->commitSession($postData->rstudioSession);
-                    }
-                break;
-                case "/api/v1/rstudio/close":
-                    $this->addLog("POST: /api/v1/rstudio/close");
-                    $this->addLog(print_r($postData, true));
-                    if($this->userHasProjectAuthorization($postData->projectId)) {
-                        $out = $this->sessionManagerInterface->delSession($postData->rstudioSession);
-                    }
-                break;
-                */
                 case "/api/v1/user/project/delete":
                     $this->addLog("POST: /api/v1/user/project/delete");
                     if($this->userHasProjectAuthorization($postData->projectId)) {
-                        $out = $this->deleteGitlabProject($postData->projectId);
+                        $apiResponse = $this->deleteGitlabProject($postData->projectId);
                     }
                     else {
-                        $ar = new ApiResponse(401, array('message' => 'This user does not have access to that project.'));
-                        $out = $ar->toJSON();
+                        $apiResponse = new ApiResponse(401, array('message' => 'This user does not have access to that project.'));
                     }
                 break;
             }
-            return $out;
+            return $apiResponse->toJSON();
         }
+    }
+
+    function getMongoPatCollection() {
+        $mongoPass = getenv("MONGO_ROOT_PASSWORD");
+        $client = new Client("mongodb://root:".$mongoPass."@mongo");
+        $database = $client->selectDatabase('humlab_speech');
+        $collection = $database->selectCollection('personal_access_tokens');
+        return $collection;
+    }
+
+    function savePersonalAccessTokenToStorage($userId, $pat) {
+        $coll = $this->getMongoPatCollection();
+        $coll->deleteMany(['userId' => $userId]);
+        $result = $coll->insertOne([
+            'userId' => $userId,
+            'pat' => $pat
+        ]);
+        return $result;
+    }
+
+    function getPersonalAccessTokenFromStorage($userId) {
+        $this->addLog("getPersonalAccessTokenFromStorage ".$userId);
+        $coll = $this->getMongoPatCollection();
+        $result = $coll->findOne(['userId' => $userId]);
+
+        if($result == null) {
+            return false;
+        }
+
+        return $result->jsonSerialize();
     }
 
     function httpRequest($method = "GET", $url, $options = []) {
@@ -235,26 +218,6 @@ class Application {
             $this->addLog("msg:".$e->getResponse()->getBody(), "error");
             return false;
         }
-    
-        /*
-        if(strtolower($method) == "post" || strtolower($method) == "put") {
-            try {
-                $response = $httpClient->request($method, $url, $options);
-            }
-            catch(Exception $e) {
-                $exception = $e;
-            }
-        }
-    
-        if(strtolower($method) == "get" || strtolower($method) == "delete" ) {
-            try {
-                $response = $httpClient->request($method, $url);
-            }
-            catch(Exception $e) {
-                $exception = $e;
-            }
-        }
-        */
     
         $ret = [];
     
@@ -322,15 +285,24 @@ class Application {
 
         $this->addLog("File destination: ".$targetDir);
         
-        if(!is_dir($targetDir)) {
-            if(mkdir($targetDir, 0777, true)) {
-                $this->addLog("Failed creating upload destination! : ".$targetDir, "error");
-            }
-        }
+        $this->createDirectory($targetDir);
+
         file_put_contents($targetDir."/".$fileName, $fileBinary);
 
         $ar = new ApiResponse(200);
         return $ar;
+    }
+
+    function createDirectory($targetDir) {
+        if(!is_dir($targetDir)) {
+            umask(0);
+            $mkdirResult = mkdir($targetDir, 0777, true);
+            if(!$mkdirResult) {
+                $this->addLog("Failed creating upload destination! : ".$targetDir." As user: ".get_current_user()." (".getmyuid().")", "error");
+            }
+            return $mkdirResult;
+        }
+        return true;
     }
     
     function signOut() {
@@ -344,26 +316,9 @@ class Application {
         }
         session_destroy();
         header("Location: https://".$_SERVER['HTTP_HOST']);
+
+        return false;
     }
-    
-    
-    /**
-     * For debugging
-     */
-    function dumpServerVariables() {
-        echo "SERVER:\n";
-        print_r($_SERVER);
-        echo "SESSION:\n";
-        print_r($_SESSION);
-        echo "\n";
-        echo $this->getGitLabUsername($_SESSION['email']);
-    }
-    /*
-    if($reqMethod == "DELETE") {
-        switch($reqPath) {
-        }
-    }
-    */
     
     function getGitLabUsername($email) {
         return str_replace("@", "_at_", $email);
@@ -374,6 +329,11 @@ class Application {
         if($level == "debug" && $logLevel != "debug") {
             return;
         }
+
+        if(is_object($msg)) {
+            $msg = serialize($msg);
+        }
+
         file_put_contents("/var/log/api/webapi.log", date("Y-m-d H:i:s")." [".strtoupper($level)."] ".$msg."\n", FILE_APPEND);
     }
     
@@ -385,9 +345,9 @@ class Application {
 
         //If we don't have a PAT yet, fetch it now
         if(empty($_SESSION['personalAccessToken'])) {
-            $response = $this->createPersonalAccessToken();
-            if($response['code'] == 200) {
-                $_SESSION['personalAccessToken'] = $response['body'];
+            $response = $this->getPersonalAccessToken();
+            if($response->code == 200) {
+                $_SESSION['personalAccessToken'] = $response->body;
             }
         }
 
@@ -400,8 +360,7 @@ class Application {
             'personalAccessToken' => $_SESSION['personalAccessToken']
         ];
     
-        $ar = new ApiResponse(200, $output);
-        return $ar->toJSON();
+        return new ApiResponse(200, $output);
     }
     
     function createGitlabUser() {
@@ -433,7 +392,7 @@ class Application {
             $ar = new ApiResponse($response['code'], $response['body']);
         }
     
-        return $ar->toJSON();
+        return $ar;
     }
 
     function deleteAllPersonalAccessTokens($onlySystemTokens = true) {
@@ -479,15 +438,34 @@ class Application {
         return $ar;
     }
 
+    /**
+     * Function: getPersonalAccessToken
+     * 
+     * This first tries to return any PAT in the session, if not found, it tries to fetch it from the mongodb, if not found there either, it creates a new one in gitlab and returns that, as well as saves it in mongo
+     */
+    function getPersonalAccessToken() {
+        $pat = "";
+        if(!empty($_SESSION['personalAccessToken'])) {
+            return new ApiResponse(200, $_SESSION['personalAccessToken']);
+        }
+        
+        $res = $this->getPersonalAccessTokenFromStorage($_SESSION['gitlabUser']->id);
+        if($res !== false && !empty($res)) {
+            $pat = $res->pat;
+            return new ApiResponse(200, $pat);
+        }
+        $ar = $this->createPersonalAccessToken();
+        return $ar;
+    }
+
     function createPersonalAccessToken($overwriteIfExists = false) {
         global $gitlabAddress, $gitlabAccessToken;
         
         if(!$overwriteIfExists && !empty($_SESSION['personalAccessToken'])) {
-            $ar = new ApiResponse(200);
-            return $ar->toJSON();
+            return new ApiResponse(200);
         }
 
-        $this->deleteAllPersonalAccessTokens();
+        //$this->deleteAllPersonalAccessTokens(); //Disabled because it's not possible with current Gitlab API
 
         $this->addLog("Creating new gitlab personal access token");
         $gitlabApiRequest = $gitlabAddress."/api/v4/users/".$_SESSION['gitlabUser']->id."/personal_access_tokens?private_token=".$gitlabAccessToken;
@@ -509,10 +487,11 @@ class Application {
         if($response['code'] == 201) { //201 == Created
             $accessTokenResponse = json_decode($response['body']);
             $_SESSION['personalAccessToken'] = $accessTokenResponse->token;
+            $this->savePersonalAccessTokenToStorage($_SESSION['gitlabUser']->id, $accessTokenResponse->token);
         }
 
-        $ar = new ApiResponse($response['code']);
-        return $ar->toJSON();
+        $ar = new ApiResponse($response['code'], $_SESSION['personalAccessToken']);
+        return $ar;
     }
     
     function getGitlabUser() {
@@ -530,9 +509,12 @@ class Application {
             $userList = json_decode($userListJson);
             if(empty($userList)) {
                 //User does not exist, so create it and return it
-                $arCreateGitlabUser = $this->createGitlabUser();
-                if(json_decode($arCreateGitlabUser)->code == 200) {
+                $arCreateGitlabUser = json_decode($this->createGitlabUser());
+                if($arCreateGitlabUser->code == 200) {
                     return $this->getGitlabUser();
+                }
+                else if($arCreateGitlabUser->code == 409) {
+                    return $arCreateGitlabUser;
                 }
             }
             else {
@@ -544,7 +526,7 @@ class Application {
             $ar->body = $response['body'];
         }
     
-        return $ar->toJSON();
+        return $ar;
     }
     
     /**
@@ -556,7 +538,11 @@ class Application {
         global $gitlabAddress, $hsApiAccessToken;
         
         if(empty($_SESSION['gitlabUser'])) {
-            $this->getGitlabUser();
+            $apiResponse = $this->getGitlabUser();
+            $apiResponse = json_decode($apiResponse);
+            if($apiResponse['code'] == 409) {
+                return $apiResponse;
+            }
         }
 
         if(empty($_SESSION['personalAccessToken'])) {
@@ -570,7 +556,7 @@ class Application {
         $_SESSION['gitlabProjects'] = $projects;
         
         //Also check if any of these projects have an active running session in the rstudio-router via its API
-        $sessions = $this->sessionManagerInterface->getSessions();
+        $sessions = $this->sessionManagerInterface->_getSessions();
         if($sessions === false) {
             $this->addLog("AppRouter sessions returned false!", "error");
             $sessions = [];
@@ -589,7 +575,7 @@ class Application {
     
         $ar = new ApiResponse($response['code'], $projects);
         
-        return $ar->toJSON();
+        return $ar;
     }
 
     function createProject($postData) {
@@ -601,7 +587,7 @@ class Application {
         $response = $this->createGitlabProject($postData);
         if($response['code'] != 201) { //HTTP 201 == CREATED
             $this->addLog("Failed creating Gitlab project", "error");
-            return false;
+            return new ApiResponse(500);
         }
 
         $this->addLog("Create project emuDB trace START:");
@@ -623,6 +609,9 @@ class Application {
         $volumes = array();
         $volumes []= $uploadsVolume;
         $volumes []= $projectDirectoryTemplateVolume;
+
+        //Make sure uploads volume exists for this user - it might not if this is the first time this user is creating a project and he/she did not upload any files
+        $this->createDirectory("/tmp/uploads/".$_SESSION['gitlabUser']->id."/".$createProjectContextId);
 
         $this->addLog("Launching container to create project");
         $rstudioSessionResponse = $this->sessionManagerInterface->createSession($project->id, "rstudio", $volumes);
@@ -656,7 +645,6 @@ class Application {
         $this->addLog("Creating and linking annotation levels");
         $this->createAnnotLevelsInSession($rstudioSessionId, $form);
         
-        //$cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, ["/usr/bin/bash", "-c", "mkdir -p /home/rstudio/humlabspeech"]);
         $cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, ["/usr/bin/bash", "-c", "cp -R ".$envVars["PROJECT_PATH"]."/* /home/rstudio/humlabspeech/"]);
 
         //3. Commit & push
@@ -670,9 +658,7 @@ class Application {
         
         //addLog("session-del-cmd-output: ".print_r($cmdOutput, true), "debug");
 
-        $ar = new ApiResponse($response['code'], $response['body']);
-
-        return $ar->toJSON();
+        return new ApiResponse(200);
     }
     
     function createGitlabProject($postData) {
@@ -704,7 +690,7 @@ class Application {
     function createAnnotLevelsInSession($rstudioSessionId, $form, $env = []) {
         //Create annoation levels
         foreach($form->annotLevels as $annotLevel) {
-            $cmd = ["/usr/local/bin/R", "-f", "/rscripts/addAnnotationLevelDefinition.r"];
+            $cmd = ["/usr/local/bin/R", "-f", "/scripts/addAnnotationLevelDefinition.r"];
             $env["ANNOT_LEVEL_DEF_NAME"] = $annotLevel->name;
             $env["ANNOT_LEVEL_DEF_TYPE"] = $annotLevel->type;
 
@@ -713,7 +699,7 @@ class Application {
 
         //Create the links between annotation levels
         foreach($form->annotLevelLinks as $annotLevelLink) {
-            $cmd = ["/usr/local/bin/R", "-f", "/rscripts/addAnnotationLevelLinkDefinition.r"];
+            $cmd = ["/usr/local/bin/R", "-f", "/scripts/addAnnotationLevelLinkDefinition.r"];
             $env["ANNOT_LEVEL_LINK_SUPER"] = $annotLevelLink->superLevel;
             $env["ANNOT_LEVEL_LINK_SUB"] = $annotLevelLink->subLevel;
             $env["ANNOT_LEVEL_LINK_DEF_TYPE"] = $annotLevelLink->type;
@@ -731,7 +717,7 @@ class Application {
         $response = $this->httpRequest("DELETE", $gitlabApiRequest);
     
         $ar = new ApiResponse($response['code'], $response['body']);
-        return $ar->toJSON();
+        return $ar;
     }
 
 
