@@ -6,7 +6,7 @@
     'aliases' => 
     array (
     ),
-    'reference' => 'ad1965ea3ce337ba0b893834ed555237ca0c9cb9',
+    'reference' => '4e7d87385fae73d74444279f5416288398d6ca60',
     'name' => '__root__',
   ),
   'versions' => 
@@ -18,7 +18,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => 'ad1965ea3ce337ba0b893834ed555237ca0c9cb9',
+      'reference' => '4e7d87385fae73d74444279f5416288398d6ca60',
     ),
     'cboden/ratchet' => 
     array (

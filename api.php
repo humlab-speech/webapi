@@ -243,10 +243,10 @@ class Application {
     }
     
     function userHasProjectAuthorization($projectId) {
-        global $gitlabAddress, $gitlabAccessToken, $gitlabUser;
+        global $gitlabAddress, $gitlabAccessToken;
     
         $arProjects = $this->getGitlabUserProjects();
-        $projects = json_decode($arProjects)->body;
+        $projects = $arProjects->body;
     
         $foundProject = false;
         foreach($projects as $key => $project) {
@@ -256,7 +256,7 @@ class Application {
         }
         if(!$foundProject) {
             $this->addLog("User attempted to access unauthorized project.", "warn");
-            $this->addLog(print_r($gitlabUser, true), "debug");
+            $this->addLog(print_r($_SESSION['gitlabUser'], true), "debug");
         }
         return $foundProject;
     }
@@ -267,9 +267,11 @@ class Application {
         $this->addLog("Received upload request of file with filename '".$data->filename."'");
         $fileData = $data->file;
         $fileName = $this->sanitize($data->filename);
-        $sessionName = $this->sanitize($data->session);
+        //The 'group' is an arbitrary name which creates a grouping of files. For example the Documentation upload form component would define its own group for the files/docs uploaded through it, so that they can stay bundled in their own subdir
+        $group = $this->sanitize($data->group);
+
         $this->addLog("Post-sanitization filename: ".$fileName);
-        $this->addLog("Post-sanitization sessionName: ".$sessionName);
+        $this->addLog("Post-sanitization group name: ".$group);
 
         //file data looks like: data:audio/wav;base64,UklGRoQuFgBXQVZFZm10IBAAAAABAAEAgLsAAAB3AQACABAA
         $pos = strpos($fileData, ";base64,");
@@ -281,7 +283,7 @@ class Application {
         $fileBinary = base64_decode($fileDataWithoutMime, true);
         $this->addLog("File size of ".$fileName." is ".strlen($fileBinary)." bytes");
 
-        $targetDir = "/tmp/uploads/".$_SESSION['gitlabUser']->id."/".$data->context."/".$sessionName;
+        $targetDir = "/tmp/uploads/".$_SESSION['gitlabUser']->id."/".$data->context."/".$group;
 
         $this->addLog("File destination: ".$targetDir);
         
@@ -339,7 +341,7 @@ class Application {
     
     function getUserSessionAttributes() {
 
-        if(empty($_SESSIN['gitlabUser'])) {
+        if(empty($_SESSION['gitlabUser'])) {
             $this->getGitlabUser();
         }
 
@@ -550,7 +552,7 @@ class Application {
         }
         
         $gitlabApiRequest = $gitlabAddress."/api/v4/projects?per_page=9999&owned=false&membership=true&private_token=".$_SESSION['personalAccessToken'];
-        
+
         $response = $this->httpRequest("GET", $gitlabApiRequest);
         $projects = json_decode($response['body']);
         $_SESSION['gitlabProjects'] = $projects;
@@ -561,8 +563,6 @@ class Application {
             $this->addLog("AppRouter sessions returned false!", "error");
             $sessions = [];
         }
-    
-        $this->addLog("Sessions array: ".print_r($sessions, true), "debug");
 
         foreach($projects as $key => $project) {
             $projects[$key]->sessions = array();
@@ -645,6 +645,8 @@ class Application {
         $this->addLog("Creating and linking annotation levels");
         $this->createAnnotLevelsInSession($rstudioSessionId, $form);
         
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, ["/usr/bin/bash", "-c", "cp -R /home/uploads/docs/* ".$envVars["PROJECT_PATH"]."/Documents/"]);
+
         $cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, ["/usr/bin/bash", "-c", "cp -R ".$envVars["PROJECT_PATH"]."/* /home/rstudio/humlabspeech/"]);
 
         //3. Commit & push
@@ -729,9 +731,9 @@ class Application {
     function sanitize($string, $force_lowercase = false, $anal = false) {
         $strip = array("~", "`", "!", "@", "#", "$", "%", "^", "&", "*", "=", "+", "[", "{", "]",
                        "}", "\\", "|", ";", ":", "\"", "'", "&#8216;", "&#8217;", "&#8220;", "&#8221;", "&#8211;", "&#8212;",
-                       "â€”", "â€“", ",", "<", ">", "/", "?");
+                       "â€”", "â€“", ",", "<", ">", "?", "(", ")");
         $clean = trim(str_replace($strip, "", strip_tags($string)));
-        $clean = preg_replace('/\s+/', "-", $clean);
+        $clean = preg_replace('/\s+/', "_", $clean);
         $clean = ($anal) ? preg_replace("/[^a-zA-Z0-9]/", "", $clean) : $clean ;
         return ($force_lowercase) ?
             (function_exists('mb_strtolower')) ?
