@@ -651,10 +651,9 @@ class Application {
 
     function createStandardDirectoryStructure($sessionId, $envVars) {
         $this->addLog("Creating project directory structure");
-
         $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/bash", "/scripts/copy-template-directory-structure.sh"], $envVars);
-
-        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/bash", "-c", "cp -R /home/uploads/docs/* ".$envVars["PROJECT_PATH"]."/Documents/"]);
+        //And copy any uploaded docs
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/bash", "/scripts/copy-docs.sh"], $envVars);
     }
 
     function createEmuDb($sessionId, $envVars) {
