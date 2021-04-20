@@ -144,10 +144,15 @@ class Application {
         }
     }
 
-    function getMongoPatCollection() {
+    function getMongoDb() {
         $mongoPass = getenv("MONGO_ROOT_PASSWORD");
         $client = new Client("mongodb://root:".$mongoPass."@mongo");
         $database = $client->selectDatabase('humlab_speech');
+        return $database;
+    }
+
+    function getMongoPatCollection() {
+        $database = $this->getMongoDb();
         $collection = $database->selectCollection('personal_access_tokens');
         return $collection;
     }
@@ -554,6 +559,7 @@ class Application {
         $gitlabApiRequest = $gitlabAddress."/api/v4/projects?per_page=9999&owned=false&membership=true&private_token=".$_SESSION['personalAccessToken'];
 
         $response = $this->httpRequest("GET", $gitlabApiRequest);
+        $this->addLog("projects response: ".print_r($response, true));
         $projects = json_decode($response['body']);
         $_SESSION['gitlabProjects'] = $projects;
         
@@ -590,10 +596,7 @@ class Application {
             return new ApiResponse(500);
         }
 
-        $this->addLog("Create project emuDB trace START:");
-        //1. Spawn a new rstudio-container & Git clone project into container (automatic)
         $project = json_decode($response['body']);
-        $this->addLog("Project: ".print_r($project, true), "debug");
         array_push($_SESSION['gitlabProjects'], $project);
         
         $uploadsVolume = array(
@@ -611,56 +614,68 @@ class Application {
         $volumes []= $projectDirectoryTemplateVolume;
 
         //Make sure uploads volume exists for this user - it might not if this is the first time this user is creating a project and he/she did not upload any files
+        //Note that this will create a dir inside the edge-router container, since that's where this is being executed
         $this->createDirectory("/tmp/uploads/".$_SESSION['gitlabUser']->id."/".$createProjectContextId);
 
-        $this->addLog("Launching container to create project");
-        $rstudioSessionResponse = $this->sessionManagerInterface->createSession($project->id, "rstudio", $volumes);
-        $this->addLog("rstudioSessionResponse: ".print_r($rstudioSessionResponse, true), "debug");
-        $rstudioSessionResponseDecoded = json_decode($rstudioSessionResponse->body);
-        $rstudioSessionId = $rstudioSessionResponseDecoded->sessionAccessCode;
-        $this->addLog("rstudioSessionId: ".$rstudioSessionId, "debug");
-        
-        $this->addLog("Creating project directory structure");
-        //$cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, ["bash", "-c", "\"cp -R /project-template-structure/* /home/rstudio/\""]);
+        $this->addLog("Launching project create container");
+        $sessionResponse = $this->sessionManagerInterface->createSession($project->id, "rstudio", $volumes);
+        $sessionResponseDecoded = json_decode($sessionResponse->body);
+        $sessionId = $sessionResponseDecoded->sessionAccessCode;
 
         $envVars = ["PROJECT_PATH" => "/home/project-setup"];
 
-        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, ["/usr/bin/bash", "/scripts/copy-template-directory-structure.sh"], $envVars);
+        if($form->standardDirectoryStructure) {
+            $this->createStandardDirectoryStructure($sessionId, $envVars);
+            if($form->createEmuDb) {
+                $this->createEmuDb($sessionId, $envVars);
+            }
+        }
 
-        //2. Generate a new empty emu-db in container git dir
-        $this->addLog("Creating emuDB in project");
-        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, ["/usr/local/bin/R", "-f", "/scripts/createEmuDb.r"], $envVars);
-        $this->addLog($cmdOutput);
-
-        //Just about here we want to include any uploaded files
-        $this->addLog("Importing wav files into project");
-        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, ["/usr/local/bin/R", "-f", "/scripts/importWavFiles.r"], $envVars);
-
-        //Create a generic bundle-list for all bundles
-        $this->addLog("Creating bundle lists");
-        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, ["/usr/local/bin/R", "-f", "/scripts/createBundleList.r"], $envVars);
         
-        //$this->addLog("postData: ".print_r($postData, true), "desbug");
-
-        $this->addLog("Creating and linking annotation levels");
-        $this->createAnnotLevelsInSession($rstudioSessionId, $form);
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/bash", "-c", "cp -R ".$envVars["PROJECT_PATH"]."/* /home/rstudio/humlabspeech/"]);
         
-        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, ["/usr/bin/bash", "-c", "cp -R /home/uploads/docs/* ".$envVars["PROJECT_PATH"]."/Documents/"]);
-
-        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, ["/usr/bin/bash", "-c", "cp -R ".$envVars["PROJECT_PATH"]."/* /home/rstudio/humlabspeech/"]);
 
         //3. Commit & push
         $this->addLog("Committing project");
-        $cmdOutput = $this->sessionManagerInterface->commitSession($rstudioSessionId);
+        $cmdOutput = $this->sessionManagerInterface->commitSession($sessionId);
         //addLog("commit-cmd-output: ".print_r($cmdOutput, true), "debug");
         //4. Shutdown container
         
         $this->addLog("Shutting down project creation container");
-        $cmdOutput = $this->sessionManagerInterface->delSession($rstudioSessionId);
+        $cmdOutput = $this->sessionManagerInterface->delSession($sessionId);
         
         //addLog("session-del-cmd-output: ".print_r($cmdOutput, true), "debug");
 
         return new ApiResponse(200);
+    }
+
+    function createStandardDirectoryStructure($sessionId, $envVars) {
+        $this->addLog("Creating project directory structure");
+
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/bash", "/scripts/copy-template-directory-structure.sh"], $envVars);
+
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/bash", "-c", "cp -R /home/uploads/docs/* ".$envVars["PROJECT_PATH"]."/Documents/"]);
+    }
+
+    function createEmuDb($sessionId, $envVars) {
+        $this->addLog("Creating emuDB in project");
+
+        //2. Generate a new empty emu-db in container git dir
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/local/bin/R", "-f", "/scripts/createEmuDb.r"], $envVars);
+        $this->addLog($cmdOutput);
+
+        //Just about here we want to include any uploaded files
+        $this->addLog("Importing wav files into project");
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/local/bin/R", "-f", "/scripts/importWavFiles.r"], $envVars);
+
+        //Create a generic bundle-list for all bundles
+        $this->addLog("Creating bundle lists");
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/local/bin/R", "-f", "/scripts/createBundleList.r"], $envVars);
+        
+        //$this->addLog("postData: ".print_r($postData, true), "desbug");
+
+        $this->addLog("Creating and linking annotation levels");
+        $this->createAnnotLevelsInSession($sessionId, $form);
     }
     
     function createGitlabProject($postData) {

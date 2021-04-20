@@ -70,6 +70,7 @@ class SessionManagerInterface {
                 'project' => $project,
                 'hsApp' => $hsApp,
                 'appSession' => "",
+                'personalAccessToken' => $this->app->getPersonalAccessToken()->body,
                 'volumes' => json_encode($volumes)
             ]
         ];
@@ -106,7 +107,8 @@ class SessionManagerInterface {
                 'gitlabUser' => json_encode($_SESSION['gitlabUser']),
                 'project' => $project,
                 'hsApp' => $hsApp,
-                'appSession' => $hsAppSessionId
+                'appSession' => $hsAppSessionId,
+                'personalAccessToken' => $this->app->getPersonalAccessToken()->body
             ]
         ];
         $this->app->addLog("Will request:".$sessionManagerApiRequest, "debug");
