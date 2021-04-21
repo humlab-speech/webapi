@@ -117,6 +117,13 @@ class SessionManagerInterface {
         return new ApiResponse($response['code'], $response['body']);
     }
 
+    function copyUploadedFiles($appSessionId) {
+        $this->app->addLog("Call: copyUploadedFiles(".$appSessionId.")", "debug");
+        $sessionManagerApiRequest = $this->sessionManagerApiEndpoint."/session/".$appSessionId."/copyuploadedfiles";
+        $response = $this->app->httpRequest("GET", $sessionManagerApiRequest, ['headers' => ['hs_api_access_token' => $this->hsApiAccessToken]]);
+        return new ApiResponse(200, $response['body']);
+    }
+
     /**
      * function: runCommandInSession
      * @param $appSessionId
