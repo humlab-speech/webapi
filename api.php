@@ -588,6 +588,7 @@ class Application {
         global $gitlabAddress, $gitlabAccessToken, $appRouterInterface;
 
         $form = $postData->form;
+        $this->addLog("form dump: ".print_r($form, true));
         $createProjectContextId = $postData->context;
 
         $response = $this->createGitlabProject($postData);
@@ -627,24 +628,21 @@ class Application {
         if($form->standardDirectoryStructure) {
             $this->createStandardDirectoryStructure($sessionId, $envVars);
             if($form->createEmuDb) {
-                $this->createEmuDb($sessionId, $envVars);
+                $this->createEmuDb($sessionId, $envVars, $form);
             }
         }
 
         
-        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/bash", "-c", "cp -R ".$envVars["PROJECT_PATH"]."/* /home/rstudio/humlabspeech/"]);
-        
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/bash", "-c", "cp -R ".$envVars["PROJECT_PATH"]."/* /home/rstudio/project/"]);
+        $this->addLog("copy-dir-output: ".print_r($cmdOutput, true), "debug");
 
         //3. Commit & push
         $this->addLog("Committing project");
         $cmdOutput = $this->sessionManagerInterface->commitSession($sessionId);
-        //addLog("commit-cmd-output: ".print_r($cmdOutput, true), "debug");
-        //4. Shutdown container
         
+        //Shutdown container
         $this->addLog("Shutting down project creation container");
         $cmdOutput = $this->sessionManagerInterface->delSession($sessionId);
-        
-        //addLog("session-del-cmd-output: ".print_r($cmdOutput, true), "debug");
 
         return new ApiResponse(200);
     }
@@ -654,16 +652,12 @@ class Application {
         $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/bash", "/scripts/copy-template-directory-structure.sh"], $envVars);
         //And copy any uploaded docs
         $cmdOutput = $this->sessionManagerInterface->copyUploadedFiles($sessionId);
-        /*
-        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/bash", "/scripts/copy-docs.sh"], $envVars);
-        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["node", "/scripts/container-agent/main.js", "copy-docs"], $envVars);
-        */
     }
 
-    function createEmuDb($sessionId, $envVars) {
+    function createEmuDb($sessionId, $envVars, $form) {
         $this->addLog("Creating emuDB in project");
 
-        //2. Generate a new empty emu-db in container git dir
+        //Generate a new empty emu-db in container git dir
         $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/local/bin/R", "-f", "/scripts/createEmuDb.r"], $envVars);
         $this->addLog($cmdOutput);
 
@@ -674,11 +668,9 @@ class Application {
         //Create a generic bundle-list for all bundles
         $this->addLog("Creating bundle lists");
         $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/local/bin/R", "-f", "/scripts/createBundleList.r"], $envVars);
-        
-        //$this->addLog("postData: ".print_r($postData, true), "desbug");
 
         $this->addLog("Creating and linking annotation levels");
-        $this->createAnnotLevelsInSession($sessionId, $form);
+        $this->createAnnotLevelsInSession($sessionId, $form, $envVars);
     }
     
     function createGitlabProject($postData) {
@@ -707,14 +699,14 @@ class Application {
      * 
      * Create annotation levels in emuDB
      */
-    function createAnnotLevelsInSession($rstudioSessionId, $form, $env = []) {
+    function createAnnotLevelsInSession($sessionId, $form, $env = []) {
         //Create annoation levels
         foreach($form->annotLevels as $annotLevel) {
             $cmd = ["/usr/local/bin/R", "-f", "/scripts/addAnnotationLevelDefinition.r"];
             $env["ANNOT_LEVEL_DEF_NAME"] = $annotLevel->name;
             $env["ANNOT_LEVEL_DEF_TYPE"] = $annotLevel->type;
 
-            $cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, $cmd, $env);
+            $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, $cmd, $env);
         }
 
         //Create the links between annotation levels
@@ -724,7 +716,7 @@ class Application {
             $env["ANNOT_LEVEL_LINK_SUB"] = $annotLevelLink->subLevel;
             $env["ANNOT_LEVEL_LINK_DEF_TYPE"] = $annotLevelLink->type;
 
-            $cmdOutput = $this->sessionManagerInterface->runCommandInSession($rstudioSessionId, $cmd, $env);
+            $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, $cmd, $env);
         }
     }
     
