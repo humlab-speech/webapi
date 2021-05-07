@@ -13,8 +13,15 @@ class ApiResponse {
         http_response_code($this->code);
     }
 
-    function toJSON() {
-        return "{ \"code\": ".json_encode($this->code).", \"body\": ".json_encode($this->body)." }";
+    function toJSON($jsonEncodeValues = true) {
+        $json = "";
+        if($jsonEncodeValues) {
+            $json = "{ \"code\": ".json_encode($this->code).", \"body\": ".json_encode($this->body)." }";
+        }
+        else {
+            $json = "{ \"code\": ".$this->code.", \"body\": ".$this->body." }";
+        }
+        return $json;
     }
 }
 ?>

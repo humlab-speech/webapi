@@ -24,10 +24,15 @@ class SessionManagerInterface {
     }
 
     function _fetchGitlabProjectById($projectId) {
-        global $gitlabApiRequest, $gitlabAddress, $gitlabAccessToken;
+        global $gitlabApiRequest, $gitlabAddress, $gitlabRootAccessToken;
         $this->app->addLog("Call: _fetchGitlabProjectById(".$projectId.")", "debug");
-        $gitlabApiRequest = $gitlabAddress."/api/v4/projects/".$projectId."?private_token=".$gitlabAccessToken;
+        $gitlabApiRequest = $gitlabAddress."/api/v4/projects/".$projectId."?private_token=".$gitlabRootAccessToken;
         return $this->app->httpRequest("GET", $gitlabApiRequest, ['headers' => ['hs_api_access_token' => $this->hsApiAccessToken]]);
+    }
+
+    function isGitlabReady() {
+        $sessionManagerApiRequest = $this->sessionManagerApiEndpoint."/isgitlabready";
+        return $this->app->httpRequest("GET", $sessionManagerApiRequest, ['headers' => ['hs_api_access_token' => $this->hsApiAccessToken]]);
     }
 
     /**
@@ -51,7 +56,7 @@ class SessionManagerInterface {
      * 
      * Similar to fetchSession but ALWAYS creates a new session, never returns an existing one.
      */
-    function createSession($projectId, $hsApp = "rstudio", $volumes = []) {
+    function createSession($projectId, $hsApp = "operations", $volumes = []) {
         $this->app->addLog("Call: createSession(".$projectId.", ".$hsApp.")", "debug");
         $response = $this->_fetchGitlabProjectById($projectId);
         $project = $response['body'];
@@ -118,7 +123,6 @@ class SessionManagerInterface {
     }
 
     function copyUploadedFiles($appSessionId) {
-        $this->app->addLog("Call: copyUploadedFiles(".$appSessionId.")", "debug");
         $sessionManagerApiRequest = $this->sessionManagerApiEndpoint."/session/".$appSessionId."/copyuploadedfiles";
         $response = $this->app->httpRequest("GET", $sessionManagerApiRequest, ['headers' => ['hs_api_access_token' => $this->hsApiAccessToken]]);
         return new ApiResponse(200, $response['body']);

@@ -14,10 +14,8 @@ session_set_cookie_params(60*60*8, "/", ".".$domain);
 session_start();
 
 $gitlabAddress = "http://gitlab:80";
-$gitlabAccessToken = getenv("GIT_API_ACCESS_TOKEN");
+$gitlabRootAccessToken = getenv("GIT_API_ACCESS_TOKEN");
 $hsApiAccessToken = getenv("HS_API_ACCESS_TOKEN");
-$logLevel = getenv("LOG_LEVEL");
-
 
 class Application {
     function __construct() {
@@ -26,6 +24,23 @@ class Application {
     }
 
     function route() {
+        $apiResponse = false;
+        $reqPath = $_SERVER['REQUEST_URI'];
+        $reqMethod = $_SERVER['REQUEST_METHOD'];
+
+        //PUBLIC METHODS
+        if($reqMethod == "GET") {
+            switch($reqPath) {
+                case "/api/v1/isgitlabready":
+                    $this->addLog("GET: /api/v1/isgitlabready", "debug");
+                    $sessManApiResponse = $this->sessionManagerInterface->isGitlabReady();
+                    $ar = new ApiResponse($sessManApiResponse['code'], $sessManApiResponse['body']);
+                    return $ar->toJSON(false);
+                break;
+            }
+        }
+
+        //AUTH CONTROL - ALL METHODS BEYOND THIS POINT REQUIRES THE USER TO BE SIGNED-IN
         if(empty($_SESSION['authorized']) || $_SESSION['authorized'] !== true) {
             //if user has not passed a valid authentication, don't allow access to this API
             $this->addLog("User not signed in - Authorization required");
@@ -33,31 +48,28 @@ class Application {
             echo $ar->toJSON();
             exit();
         }
-
-        $reqPath = $_SERVER['REQUEST_URI'];
-        $reqMethod = $_SERVER['REQUEST_METHOD'];
         
         if($reqMethod == "GET") {
             switch($reqPath) {
                 case "/api/v1/personalaccesstoken":
-                    $this->addLog("GET: /api/v1/personalaccesstoken");
+                    $this->addLog("GET: /api/v1/personalaccesstoken", "debug");
                     $apiResponse = $this->getPersonalAccessToken();
                 break;
                 case "/api/v1/user":
-                    $this->addLog("GET: /api/v1/user");
+                    $this->addLog("GET: /api/v1/user", "debug");
                     $apiResponse = $this->getGitlabUser();
                 break;
                 case "/api/v1/session":
-                    $this->addLog("GET: /api/v1/session");
+                    $this->addLog("GET: /api/v1/session", "debug");
                     $this->addLog("cwd: ".getcwd());
                     $apiResponse = $this->getUserSessionAttributes();
                 break;
                 case "/api/v1/user/project":
-                    $this->addLog("GET: /api/v1/user/project");
+                    $this->addLog("GET: /api/v1/user/project", "debug");
                     $apiResponse = $this->getGitlabUserProjects();
                 break;
                 case "/api/v1/signout":
-                    $this->addLog("GET: /api/v1/signout");
+                    $this->addLog("GET: /api/v1/signout", "debug");
                     $apiResponse = $this->signOut();
                 break;
             }
@@ -75,24 +87,24 @@ class Application {
         
             switch($reqPath) {
                 case "/api/v1/upload":
-                    $this->addLog("POST: /api/v1/upload");
+                    $this->addLog("POST: /api/v1/upload", "debug");
                     $apiResponse = $this->handleUpload();
                 break;
                 case "/api/v1/personalaccesstoken":
-                    $this->addLog("POST: /api/v1/personalaccesstoken");
+                    $this->addLog("POST: /api/v1/personalaccesstoken", "debug");
                     $apiResponse = $this->createPersonalAccessToken();
                 break;
                 case "/api/v1/user":
-                    $this->addLog("POST: /api/v1/user");
+                    $this->addLog("POST: /api/v1/user", "debug");
                     $apiResponse = $this->createGitlabUser();
                 break;
                 case "/api/v1/user/project":
-                    $this->addLog("POST: /api/v1/user/project");
+                    $this->addLog("POST: /api/v1/user/project", "debug");
                     //TODO: Perhaps verify that this user has the right to create a new project?
                     $apiResponse = $this->createProject($postData);
                 break;
                 case "/api/v1/rstudio/session/please":
-                    $this->addLog("POST: /api/v1/rstudio/session/please");
+                    $this->addLog("POST: /api/v1/rstudio/session/please", "debug");
                     if($this->userHasProjectAuthorization($postData->projectId)) {
                         $apiResponse = $this->sessionManagerInterface->fetchSession($postData->projectId, "rstudio");
                     }
@@ -101,7 +113,7 @@ class Application {
                     }
                 break;
                 case "/api/v1/jupyter/session/please":
-                    $this->addLog("POST: /api/v1/jupyter/session/please");
+                    $this->addLog("POST: /api/v1/jupyter/session/please", "debug");
                     if($this->userHasProjectAuthorization($postData->projectId)) {
                         $apiResponse = $this->sessionManagerInterface->fetchSession($postData->projectId, "jupyter");
                     }
@@ -110,7 +122,7 @@ class Application {
                     }
                 break;
                 case "/api/v1/emuwebapp/session/please":
-                    $this->addLog("POST: /api/v1/emuwebapp/session/please");
+                    $this->addLog("POST: /api/v1/emuwebapp/session/please", "debug");
                     if($this->userHasProjectAuthorization($postData->projectId)) {
                         $apiResponse = new ApiResponse(200, array('personalAccessToken' => $_SESSION['personalAccessToken']));
                     }
@@ -119,19 +131,19 @@ class Application {
                     }
                 break;
                 case "/api/v1/session/save":
-                    $this->addLog("POST: /api/v1/session/save");
+                    $this->addLog("POST: /api/v1/session/save", "debug");
                     if($this->userHasProjectAuthorization($postData->projectId)) {
                         $apiResponse = $this->sessionManagerInterface->commitSession($postData->sessionId);
                     }
                 break;
                 case "/api/v1/session/close":
-                    $this->addLog("POST: /api/v1/session/close");
+                    $this->addLog("POST: /api/v1/session/close", "debug");
                     if($this->userHasProjectAuthorization($postData->projectId)) {
                         $apiResponse = $this->sessionManagerInterface->delSession($postData->sessionId);
                     }
                 break;
                 case "/api/v1/user/project/delete":
-                    $this->addLog("POST: /api/v1/user/project/delete");
+                    $this->addLog("POST: /api/v1/user/project/delete", "debug");
                     if($this->userHasProjectAuthorization($postData->projectId)) {
                         $apiResponse = $this->deleteGitlabProject($postData->projectId);
                     }
@@ -180,7 +192,7 @@ class Application {
     }
 
     function httpRequest($method = "GET", $url, $options = []) {
-        $this->addLog("Http Request: ".$method." ".$url);
+        $this->addLog("Http Request: ".$method." ".$url, "debug");
         //$this->addLog(print_r($options, true), "debug");
         $httpClient = new GuzzleHttp\Client();
     
@@ -248,7 +260,7 @@ class Application {
     }
     
     function userHasProjectAuthorization($projectId) {
-        global $gitlabAddress, $gitlabAccessToken;
+        global $gitlabAddress, $gitlabRootAccessToken;
     
         $arProjects = $this->getGitlabUserProjects();
         $projects = $arProjects->body;
@@ -275,22 +287,22 @@ class Application {
         //The 'group' is an arbitrary name which creates a grouping of files. For example the Documentation upload form component would define its own group for the files/docs uploaded through it, so that they can stay bundled in their own subdir
         $group = $this->sanitize($data->group);
 
-        $this->addLog("Post-sanitization filename: ".$fileName);
-        $this->addLog("Post-sanitization group name: ".$group);
+        $this->addLog("Post-sanitization filename: ".$fileName, "debug");
+        $this->addLog("Post-sanitization group name: ".$group, "debug");
 
         //file data looks like: data:audio/wav;base64,UklGRoQuFgBXQVZFZm10IBAAAAABAAEAgLsAAAB3AQACABAA
         $pos = strpos($fileData, ";base64,");
         $mime = substr($fileData, 5, $pos);
-        $this->addLog("Reported mime-type of file is: ".$mime);
+        $this->addLog("Reported mime-type of file is: ".$mime, "debug");
         $fileDataWithoutMime = substr($fileData, $pos+8);
 
         $fileDataWithoutMime = str_replace(' ','+',$fileDataWithoutMime);
         $fileBinary = base64_decode($fileDataWithoutMime, true);
-        $this->addLog("File size of ".$fileName." is ".strlen($fileBinary)." bytes");
+        $this->addLog("File size of ".$fileName." is ".strlen($fileBinary)." bytes", "debug");
 
         $targetDir = "/tmp/uploads/".$_SESSION['gitlabUser']->id."/".$data->context."/".$group;
 
-        $this->addLog("File destination: ".$targetDir);
+        $this->addLog("File destination: ".$targetDir, "debug");
         
         $this->createDirectory($targetDir);
 
@@ -328,20 +340,24 @@ class Application {
     }
     
     function getGitLabUsername($email) {
-        return str_replace("@", "_at_", $email);
+        return $_SESSION['username'];
+        //return str_replace("@", "_at_", $email);
     }
     
     function addLog($msg, $level = "info") {
-        global $logLevel;
-        if($level == "debug" && $logLevel != "debug") {
-            return;
-        }
+        $level = strtolower($level);
 
         if(is_object($msg)) {
             $msg = serialize($msg);
         }
 
-        file_put_contents("/var/log/api/webapi.log", date("Y-m-d H:i:s")." [".strtoupper($level)."] ".$msg."\n", FILE_APPEND);
+        if($level == "info" || $level == "error") {
+            file_put_contents("/var/log/api/webapi.log", date("Y-m-d H:i:s")." [".strtoupper($level)."] ".$msg."\n", FILE_APPEND);
+            file_put_contents("/var/log/api/webapi.debug.log", date("Y-m-d H:i:s")." [".strtoupper($level)."] ".$msg."\n", FILE_APPEND);
+        }
+        if($level == "debug") {
+            file_put_contents("/var/log/api/webapi.debug.log", date("Y-m-d H:i:s")." [".strtoupper($level)."] ".$msg."\n", FILE_APPEND);
+        }
     }
     
     function getUserSessionAttributes() {
@@ -371,10 +387,11 @@ class Application {
     }
     
     function createGitlabUser() {
-        global $gitlabAddress, $gitlabAccessToken;
-        
+        global $gitlabAddress, $gitlabRootAccessToken;
+
         $gitlabUsername = $this->getGitLabUsername($_SESSION['email']);
-        $gitlabApiRequest = $gitlabAddress."/api/v4/users?username=".$gitlabUsername."&private_token=".$gitlabAccessToken;
+        $this->addLog("Creating GitLab user ".$gitlabUsername);
+        $gitlabApiRequest = $gitlabAddress."/api/v4/users?username=".$gitlabUsername."&private_token=".$gitlabRootAccessToken;
     
         $options = [
             'form_params' => [
@@ -403,7 +420,7 @@ class Application {
     }
 
     function deleteAllPersonalAccessTokens($onlySystemTokens = true) {
-        $this->addLog("deleteAllPersonalAccessTokens");
+        $this->addLog("deleteAllPersonalAccessTokens", "debug");
         $ar = $this->fetchPersonalAccessTokens();
         if($ar->code != 200) {
             $this->addLog("Not deleting personal access tokens, because return code on fetching list of tokens was ".$ar->code);
@@ -428,15 +445,15 @@ class Application {
     }
 
     function deletePersonalAccessToken($tokenId) {
-        global $gitlabAddress, $gitlabAccessToken;
-        $gitlabApiRequest = $gitlabAddress."/api/v4/personal_access_tokens/".$tokenId."?private_token=".$gitlabAccessToken;
+        global $gitlabAddress, $gitlabRootAccessToken;
+        $gitlabApiRequest = $gitlabAddress."/api/v4/personal_access_tokens/".$tokenId."?private_token=".$gitlabRootAccessToken;
         $response = $this->httpRequest("DELETE", $gitlabApiRequest);
         return new ApiResponse($response['code'], $response['body']);
     }
 
     function fetchPersonalAccessTokens() {
-        global $gitlabAddress, $gitlabAccessToken;
-        $gitlabApiRequest = $gitlabAddress."/api/v4/personal_access_tokens?user_id=".$_SESSION['gitlabUser']->id."&private_token=".$gitlabAccessToken;
+        global $gitlabAddress, $gitlabRootAccessToken;
+        $gitlabApiRequest = $gitlabAddress."/api/v4/personal_access_tokens?user_id=".$_SESSION['gitlabUser']->id."&private_token=".$gitlabRootAccessToken;
         $response = $this->httpRequest("GET", $gitlabApiRequest);
 
         $this->addLog("Fetch PAT response: ".print_r($response, true), "debug");
@@ -466,7 +483,7 @@ class Application {
     }
 
     function createPersonalAccessToken($overwriteIfExists = false) {
-        global $gitlabAddress, $gitlabAccessToken;
+        global $gitlabAddress, $gitlabRootAccessToken;
         
         if(!$overwriteIfExists && !empty($_SESSION['personalAccessToken'])) {
             return new ApiResponse(200);
@@ -475,7 +492,7 @@ class Application {
         //$this->deleteAllPersonalAccessTokens(); //Disabled because it's not possible with current Gitlab API
 
         $this->addLog("Creating new gitlab personal access token");
-        $gitlabApiRequest = $gitlabAddress."/api/v4/users/".$_SESSION['gitlabUser']->id."/personal_access_tokens?private_token=".$gitlabAccessToken;
+        $gitlabApiRequest = $gitlabAddress."/api/v4/users/".$_SESSION['gitlabUser']->id."/personal_access_tokens?private_token=".$gitlabRootAccessToken;
         
         $options = [
             'form_params' => [
@@ -502,10 +519,10 @@ class Application {
     }
     
     function getGitlabUser() {
-        global $gitlabAddress, $gitlabAccessToken, $gitlabUser;
+        global $gitlabAddress, $gitlabRootAccessToken, $gitlabUser;
         //Gets User info from Gitlab for currently logged in user
         $gitlabUsername = $this->getGitLabUsername($_SESSION['email']);
-        $gitlabApiRequest = $gitlabAddress."/api/v4/users?username=".$gitlabUsername."&private_token=".$gitlabAccessToken;
+        $gitlabApiRequest = $gitlabAddress."/api/v4/users?username=".$gitlabUsername."&private_token=".$gitlabRootAccessToken;
     
         $response = $this->httpRequest("GET", $gitlabApiRequest);
     
@@ -559,7 +576,6 @@ class Application {
         $gitlabApiRequest = $gitlabAddress."/api/v4/projects?per_page=9999&owned=false&membership=true&private_token=".$_SESSION['personalAccessToken'];
 
         $response = $this->httpRequest("GET", $gitlabApiRequest);
-        $this->addLog("projects response: ".print_r($response, true));
         $projects = json_decode($response['body']);
         $_SESSION['gitlabProjects'] = $projects;
         
@@ -585,10 +601,9 @@ class Application {
     }
 
     function createProject($postData) {
-        global $gitlabAddress, $gitlabAccessToken, $appRouterInterface;
+        global $gitlabAddress, $gitlabRootAccessToken, $appRouterInterface;
 
         $form = $postData->form;
-        $this->addLog("form dump: ".print_r($form, true));
         $createProjectContextId = $postData->context;
 
         $response = $this->createGitlabProject($postData);
@@ -619,7 +634,7 @@ class Application {
         $this->createDirectory("/tmp/uploads/".$_SESSION['gitlabUser']->id."/".$createProjectContextId);
 
         $this->addLog("Launching project create container");
-        $sessionResponse = $this->sessionManagerInterface->createSession($project->id, "rstudio", $volumes);
+        $sessionResponse = $this->sessionManagerInterface->createSession($project->id, "operations", $volumes);
         $sessionResponseDecoded = json_decode($sessionResponse->body);
         $sessionId = $sessionResponseDecoded->sessionAccessCode;
 
@@ -649,39 +664,59 @@ class Application {
 
     function createStandardDirectoryStructure($sessionId, $envVars) {
         $this->addLog("Creating project directory structure");
-        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/bash", "/scripts/copy-template-directory-structure.sh"], $envVars);
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/scripts/container-agent/main.js", "copy-project-template-directory"], $envVars);
+        $response = $this->handleContainerAgentResponse($cmdOutput);
+        if($response->code == 200) {
+            $this->addLog("Created project directory structure");
+        }
+
+
         //And copy any uploaded docs
         $cmdOutput = $this->sessionManagerInterface->copyUploadedFiles($sessionId);
+        $response = $this->handleContainerAgentResponse($cmdOutput);
+        if($response->code == 200) {
+            $this->addLog("Copied uploaded files");
+        }
     }
 
     function createEmuDb($sessionId, $envVars, $form) {
         $this->addLog("Creating emuDB in project");
 
         //Generate a new empty emu-db in container git dir
-        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/local/bin/R", "-f", "/scripts/createEmuDb.r"], $envVars);
-        $this->addLog($cmdOutput);
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/scripts/container-agent/main.js", "emudb-create"], $envVars);
+        $response = $this->handleContainerAgentResponse($cmdOutput);
+        if($response->code == 200) {
+            $this->addLog("Created EmuDB");
+        }
 
         //Just about here we want to include any uploaded files
         $this->addLog("Importing wav files into project");
-        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/local/bin/R", "-f", "/scripts/importWavFiles.r"], $envVars);
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/scripts/container-agent/main.js", "emudb-import-wavs"], $envVars);
+        $response = $this->handleContainerAgentResponse($cmdOutput);
+        if($response->code == 200) {
+            $this->addLog("Imported wav files into EmuDB");
+        }
 
         //Create a generic bundle-list for all bundles
         $this->addLog("Creating bundle lists");
-        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/local/bin/R", "-f", "/scripts/createBundleList.r"], $envVars);
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/scripts/container-agent/main.js", "emudb-create-bundlelist"], $envVars);
+        $response = $this->handleContainerAgentResponse($cmdOutput);
+        if($response->code == 200) {
+            $this->addLog("Created bundlelists in EmuDB");
+        }
 
-        $this->addLog("Creating and linking annotation levels");
         $this->createAnnotLevelsInSession($sessionId, $form, $envVars);
     }
     
     function createGitlabProject($postData) {
-        global $gitlabAddress, $gitlabAccessToken, $appRouterInterface;
+        global $gitlabAddress, $gitlabRootAccessToken, $appRouterInterface;
         
         $form = $postData->form;
         $createProjectContextId = $postData->context;
 
-        $gitlabApiRequest = $gitlabAddress."/api/v4/projects/user/".$_SESSION['gitlabUser']->id."?private_token=".$gitlabAccessToken;
+        $gitlabApiRequest = $gitlabAddress."/api/v4/projects/user/".$_SESSION['gitlabUser']->id."?private_token=".$gitlabRootAccessToken;
         
-        $this->addLog("Creating new GitLab project:".print_r($postData, true));
+        $this->addLog("Creating new GitLab project:".print_r($postData, true), "debug");
 
         $response = $this->httpRequest("POST", $gitlabApiRequest, [
             'form_params' => [
@@ -690,7 +725,6 @@ class Application {
         ]);
     
         $this->addLog("Gitlab project create response: ".print_r($response, true), "debug");
-
         return $response;
     }
 
@@ -700,31 +734,40 @@ class Application {
      * Create annotation levels in emuDB
      */
     function createAnnotLevelsInSession($sessionId, $form, $env = []) {
+        $this->addLog("Creating and linking annotation levels");
         //Create annoation levels
         foreach($form->annotLevels as $annotLevel) {
-            $cmd = ["/usr/local/bin/R", "-f", "/scripts/addAnnotationLevelDefinition.r"];
+            $cmd = ["/usr/bin/node", "/scripts/container-agent/main.js", "emudb-create-annotlevels"];
             $env["ANNOT_LEVEL_DEF_NAME"] = $annotLevel->name;
             $env["ANNOT_LEVEL_DEF_TYPE"] = $annotLevel->type;
 
             $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, $cmd, $env);
+            $response = $this->handleContainerAgentResponse($cmdOutput);
+            if($response->code == 200) {
+                $this->addLog("Created annotation levels in EmuDB");
+            }
         }
 
         //Create the links between annotation levels
         foreach($form->annotLevelLinks as $annotLevelLink) {
-            $cmd = ["/usr/local/bin/R", "-f", "/scripts/addAnnotationLevelLinkDefinition.r"];
+            $cmd = ["/usr/bin/node", "/scripts/container-agent/main.js", "emudb-create-annotlevellinks"];
             $env["ANNOT_LEVEL_LINK_SUPER"] = $annotLevelLink->superLevel;
             $env["ANNOT_LEVEL_LINK_SUB"] = $annotLevelLink->subLevel;
             $env["ANNOT_LEVEL_LINK_DEF_TYPE"] = $annotLevelLink->type;
 
             $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, $cmd, $env);
+            $response = $this->handleContainerAgentResponse($cmdOutput);
+            if($response->code == 200) {
+                $this->addLog("Created annotation level links in EmuDB");
+            }
         }
     }
     
     function deleteGitlabProject($projectId) {
-        global $gitlabAddress, $gitlabAccessToken;
+        global $gitlabAddress, $gitlabRootAccessToken;
     
         $gitlabUsername = $this->getGitLabUsername($_SESSION['email']);
-        $gitlabApiRequest = $gitlabAddress."/api/v4/projects/".$projectId."?private_token=".$gitlabAccessToken;
+        $gitlabApiRequest = $gitlabAddress."/api/v4/projects/".$projectId."?private_token=".$gitlabRootAccessToken;
         
         $response = $this->httpRequest("DELETE", $gitlabApiRequest);
     
@@ -732,6 +775,20 @@ class Application {
         return $ar;
     }
 
+    function handleContainerAgentResponse($response) {
+        if(is_string($response)) {
+            $response = @json_decode($response);
+            if(!is_object($response)) {
+                $this->addLog("Could not parse Container-agent response", "error");
+                return false;
+            }
+        }
+        if($response->code != 200) {
+            $this->addLog($responseJson, "error");
+        }
+
+        return $response;
+    }
 
     /**
      * Function: sanitize
