@@ -23,6 +23,39 @@ class Application {
         $this->sessionManagerInterface = new SessionManagerInterface($this, $hsApiAccessToken);
     }
 
+    /**
+     * Function: restMatchPath
+     * 
+     * Takes a request path and a REST path template and figures out if they match and extracts vars defined with :myvar
+     * 
+     */
+    function restMatchPath($path, $template) {
+        $regexp = $template;
+        $varMatches = null;
+        preg_match_all("/:[a-z0-9_]*/", $regexp, $varMatches);
+
+        if(count($varMatches) > 0) {
+            $varMatches = $varMatches[0];
+            foreach($varMatches as $key => $vm) {
+                $varMatches[$key] = str_replace(":", "", $varMatches[$key]);
+            }
+        }
+
+        $regexp = "/".str_replace("/", "\/", $regexp)."/";
+        $regexp = preg_replace("/(:[a-z0-9_]*)/", "([a-z0-9_]*)", $regexp);
+        $matches = null;
+        $match = preg_match($regexp, $path, $matches);
+        if($match) {
+            $varMap = [];
+            foreach($varMatches as $key => $vm) {
+                $varMap[$vm] = $matches[$key+1];
+            }
+
+            return ['matched' => true, 'varMap' => $varMap];
+        }
+        return ['matched' => false];
+    }
+
     function route() {
         $apiResponse = false;
         $reqPath = $_SERVER['REQUEST_URI'];
@@ -48,112 +81,138 @@ class Application {
             echo $ar->toJSON();
             exit();
         }
-        
+
         if($reqMethod == "GET") {
-            switch($reqPath) {
-                case "/api/v1/personalaccesstoken":
-                    $this->addLog("GET: /api/v1/personalaccesstoken", "debug");
-                    $apiResponse = $this->getPersonalAccessToken();
-                break;
-                case "/api/v1/user":
-                    $this->addLog("GET: /api/v1/user", "debug");
-                    $apiResponse = $this->getGitlabUser();
-                break;
-                case "/api/v1/session":
-                    $this->addLog("GET: /api/v1/session", "debug");
-                    $this->addLog("cwd: ".getcwd());
-                    $apiResponse = $this->getUserSessionAttributes();
-                break;
-                case "/api/v1/user/project":
-                    $this->addLog("GET: /api/v1/user/project", "debug");
-                    $apiResponse = $this->getGitlabUserProjects();
-                break;
-                case "/api/v1/signout":
-                    $this->addLog("GET: /api/v1/signout", "debug");
-                    $apiResponse = $this->signOut();
-                break;
+            $matchResult = $this->restMatchPath($reqPath, "/api/v1/personalaccesstoken");
+            if($matchResult['matched']) {
+                $apiResponse = $this->getPersonalAccessToken();
+            }
+            $matchResult = $this->restMatchPath($reqPath, "/api/v1/user");
+            if($matchResult['matched']) {
+                $apiResponse = $this->getGitlabUser();
+            }
+            $matchResult = $this->restMatchPath($reqPath, "/api/v1/session");
+            if($matchResult['matched']) {
+                $apiResponse = $this->getUserSessionAttributes();
+            }
+            $matchResult = $this->restMatchPath($reqPath, "/api/v1/user/project");
+            if($matchResult['matched']) {
+                $apiResponse = $this->getGitlabUserProjects();
+            }
+            $matchResult = $this->restMatchPath($reqPath, "/api/v1/signout");
+            if($matchResult['matched']) {
+                $apiResponse = $this->signOut();
+            }
+            $matchResult = $this->restMatchPath($reqPath, "/api/v1/user/project/:project_id/session");
+            if($matchResult['matched']) {
+                $apiResponse = $this->getProjectOperationsSession($matchResult['varMap']['project_id']);
             }
 
             if($apiResponse !== false) {
                 return $apiResponse->toJSON();
             }
         }
-        
+
         if($reqMethod == "POST") {
             $postData = [];
             if(!empty($_POST['data'])) {
                 $postData = json_decode($_POST['data']);
             }
-        
-            switch($reqPath) {
-                case "/api/v1/upload":
-                    $this->addLog("POST: /api/v1/upload", "debug");
-                    $apiResponse = $this->handleUpload();
-                break;
-                case "/api/v1/personalaccesstoken":
-                    $this->addLog("POST: /api/v1/personalaccesstoken", "debug");
-                    $apiResponse = $this->createPersonalAccessToken();
-                break;
-                case "/api/v1/user":
-                    $this->addLog("POST: /api/v1/user", "debug");
-                    $apiResponse = $this->createGitlabUser();
-                break;
-                case "/api/v1/user/project":
-                    $this->addLog("POST: /api/v1/user/project", "debug");
-                    //TODO: Perhaps verify that this user has the right to create a new project?
-                    $apiResponse = $this->createProject($postData);
-                break;
-                case "/api/v1/rstudio/session/please":
-                    $this->addLog("POST: /api/v1/rstudio/session/please", "debug");
-                    if($this->userHasProjectAuthorization($postData->projectId)) {
-                        $apiResponse = $this->sessionManagerInterface->fetchSession($postData->projectId, "rstudio");
-                    }
-                    else {
-                        $apiResponse = new ApiResponse(401, array('message' => 'This user does not have access to that project.'));
-                    }
-                break;
-                case "/api/v1/jupyter/session/please":
-                    $this->addLog("POST: /api/v1/jupyter/session/please", "debug");
-                    if($this->userHasProjectAuthorization($postData->projectId)) {
-                        $apiResponse = $this->sessionManagerInterface->fetchSession($postData->projectId, "jupyter");
-                    }
-                    else {
-                        $apiResponse = new ApiResponse(401, array('message' => 'This user does not have access to that project.'));
-                    }
-                break;
-                case "/api/v1/emuwebapp/session/please":
-                    $this->addLog("POST: /api/v1/emuwebapp/session/please", "debug");
-                    if($this->userHasProjectAuthorization($postData->projectId)) {
-                        $apiResponse = new ApiResponse(200, array('personalAccessToken' => $_SESSION['personalAccessToken']));
-                    }
-                    else {
-                        $apiResponse = new ApiResponse(401, array('message' => 'This user does not have access to that project.'));
-                    }
-                break;
-                case "/api/v1/session/save":
-                    $this->addLog("POST: /api/v1/session/save", "debug");
-                    if($this->userHasProjectAuthorization($postData->projectId)) {
-                        $apiResponse = $this->sessionManagerInterface->commitSession($postData->sessionId);
-                    }
-                break;
-                case "/api/v1/session/close":
-                    $this->addLog("POST: /api/v1/session/close", "debug");
-                    if($this->userHasProjectAuthorization($postData->projectId)) {
-                        $apiResponse = $this->sessionManagerInterface->delSession($postData->sessionId);
-                    }
-                break;
-                case "/api/v1/user/project/delete":
-                    $this->addLog("POST: /api/v1/user/project/delete", "debug");
-                    if($this->userHasProjectAuthorization($postData->projectId)) {
-                        $apiResponse = $this->deleteGitlabProject($postData->projectId);
-                    }
-                    else {
-                        $apiResponse = new ApiResponse(401, array('message' => 'This user does not have access to that project.'));
-                    }
-                break;
+
+            $matchResult = $this->restMatchPath($reqPath, "/api/v1/upload");
+            if($matchResult['matched']) {
+                $this->addLog("POST: /api/v1/upload", "debug");
+                $apiResponse = $this->handleUpload();
+            }
+            $matchResult = $this->restMatchPath($reqPath, "/api/v1/personalaccesstoken");
+            if($matchResult['matched']) {
+                $this->addLog("POST: /api/v1/personalaccesstoken", "debug");
+                $apiResponse = $this->createPersonalAccessToken();
+            }
+            $matchResult = $this->restMatchPath($reqPath, "/api/v1/user");
+            if($matchResult['matched']) {
+                $this->addLog("POST: /api/v1/user", "debug");
+                $apiResponse = $this->createGitlabUser();
+            }
+            $matchResult = $this->restMatchPath($reqPath, "/api/v1/user/project");
+            if($matchResult['matched']) {
+                $this->addLog("POST: /api/v1/user/project", "debug");
+                //TODO: Perhaps verify that this user has the right to create a new project?
+                $apiResponse = $this->createProject($postData);
+            }
+            $matchResult = $this->restMatchPath($reqPath, "/api/v1/rstudio/session/please");
+            if($matchResult['matched']) {
+                $this->addLog("POST: /api/v1/rstudio/session/please", "debug");
+                if($this->userHasProjectAuthorization($postData->projectId)) {
+                    $apiResponse = $this->sessionManagerInterface->fetchSession($postData->projectId, "rstudio");
+                }
+                else {
+                    $apiResponse = new ApiResponse(401, array('message' => 'This user does not have access to that project.'));
+                }
+            }
+            $matchResult = $this->restMatchPath($reqPath, "/api/v1/jupyter/session/please");
+            if($matchResult['matched']) {
+                $this->addLog("POST: /api/v1/jupyter/session/please", "debug");
+                if($this->userHasProjectAuthorization($postData->projectId)) {
+                    $apiResponse = $this->sessionManagerInterface->fetchSession($postData->projectId, "jupyter");
+                }
+                else {
+                    $apiResponse = new ApiResponse(401, array('message' => 'This user does not have access to that project.'));
+                }
+            }
+            $matchResult = $this->restMatchPath($reqPath, "/api/v1/emuwebapp/session/please");
+            if($matchResult['matched']) {
+                $this->addLog("POST: /api/v1/emuwebapp/session/please", "debug");
+                if($this->userHasProjectAuthorization($postData->projectId)) {
+                    $apiResponse = new ApiResponse(200, array('personalAccessToken' => $_SESSION['personalAccessToken']));
+                }
+                else {
+                    $apiResponse = new ApiResponse(401, array('message' => 'This user does not have access to that project.'));
+                }
+            }
+            $matchResult = $this->restMatchPath($reqPath, "/api/v1/session/save");
+            if($matchResult['matched']) {
+                $this->addLog("POST: /api/v1/session/save", "debug");
+                if($this->userHasProjectAuthorization($postData->projectId)) {
+                    $apiResponse = $this->sessionManagerInterface->commitSession($postData->sessionId);
+                }
+            }
+            $matchResult = $this->restMatchPath($reqPath, "/api/v1/session/close");
+            if($matchResult['matched']) {
+                $this->addLog("POST: /api/v1/session/close", "debug");
+                if($this->userHasProjectAuthorization($postData->projectId)) {
+                    $apiResponse = $this->sessionManagerInterface->delSession($postData->sessionId);
+                }
+            }
+            $matchResult = $this->restMatchPath($reqPath, "/api/v1/user/project/delete");
+            if($matchResult['matched']) {
+                $this->addLog("POST: /api/v1/user/project/delete", "debug");
+                if($this->userHasProjectAuthorization($postData->projectId)) {
+                    $apiResponse = $this->deleteGitlabProject($postData->projectId);
+                }
+                else {
+                    $apiResponse = new ApiResponse(401, array('message' => 'This user does not have access to that project.'));
+                }
             }
             return $apiResponse->toJSON();
         }
+    }
+
+    function getProjectOperationsSession($projectId) {
+        $this->addLog("getProjectOperationsSession ".$projectId, "debug");
+
+        $sessionResponse = $this->sessionManagerInterface->createSession($projectId, "operations");
+        $sessionResponseDecoded = json_decode($sessionResponse->body);
+        $sessionId = $sessionResponseDecoded->sessionAccessCode;
+        $this->addLog("Created operations session ".$sessionId);
+
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/scripts/container-agent/main.js", "emudb-scan"], $envVars);
+        $this->addLog($cmdOutput, "debug");
+
+        $this->sessionManagerInterface->getEmuDbProperties();
+
+        $ar = new ApiResponse(200);
+        return $ar;
     }
 
     function getMongoDb() {
@@ -647,15 +706,13 @@ class Application {
             }
         }
 
-        
-        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/bash", "-c", "cp -R ".$envVars["PROJECT_PATH"]."/* /home/rstudio/project/"]);
-        $this->addLog("copy-dir-output: ".print_r($cmdOutput, true), "debug");
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/scripts/container-agent/main.js", "full-recursive-copy", $envVars["PROJECT_PATH"], "/home/rstudio/project"], $envVars);
+        $this->addLog("copy-dir-output: ".print_r($cmdOutput, true), "debug");        
 
         //3. Commit & push
         $this->addLog("Committing project");
         $cmdOutput = $this->sessionManagerInterface->commitSession($sessionId);
         
-        //Shutdown container
         $this->addLog("Shutting down project creation container");
         $cmdOutput = $this->sessionManagerInterface->delSession($sessionId);
 
