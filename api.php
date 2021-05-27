@@ -206,7 +206,7 @@ class Application {
         $sessionId = $sessionResponseDecoded->sessionAccessCode;
         $this->addLog("Created operations session ".$sessionId);
 
-        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/scripts/container-agent/main.js", "emudb-scan"], $envVars);
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/container-agent/main.js", "emudb-scan"], $envVars);
         $this->addLog($cmdOutput, "debug");
 
         $this->sessionManagerInterface->getEmuDbProperties();
@@ -706,7 +706,7 @@ class Application {
             }
         }
 
-        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/scripts/container-agent/main.js", "full-recursive-copy", $envVars["PROJECT_PATH"], "/home/rstudio/project"], $envVars);
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/container-agent/main.js", "full-recursive-copy", $envVars["PROJECT_PATH"], "/home/rstudio/project"], $envVars);
         $this->addLog("copy-dir-output: ".print_r($cmdOutput, true), "debug");        
 
         //3. Commit & push
@@ -721,7 +721,7 @@ class Application {
 
     function createStandardDirectoryStructure($sessionId, $envVars) {
         $this->addLog("Creating project directory structure");
-        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/scripts/container-agent/main.js", "copy-project-template-directory"], $envVars);
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/container-agent/main.js", "copy-project-template-directory"], $envVars);
         $response = $this->handleContainerAgentResponse($cmdOutput);
         if($response->code == 200) {
             $this->addLog("Created project directory structure");
@@ -740,7 +740,7 @@ class Application {
         $this->addLog("Creating emuDB in project");
 
         //Generate a new empty emu-db in container git dir
-        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/scripts/container-agent/main.js", "emudb-create"], $envVars);
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/container-agent/main.js", "emudb-create"], $envVars);
         $response = $this->handleContainerAgentResponse($cmdOutput);
         if($response->code == 200) {
             $this->addLog("Created EmuDB");
@@ -748,7 +748,7 @@ class Application {
 
         //Just about here we want to include any uploaded files
         $this->addLog("Importing wav files into project");
-        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/scripts/container-agent/main.js", "emudb-import-wavs"], $envVars);
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/container-agent/main.js", "emudb-import-wavs"], $envVars);
         $response = $this->handleContainerAgentResponse($cmdOutput);
         if($response->code == 200) {
             $this->addLog("Imported wav files into EmuDB");
@@ -756,7 +756,7 @@ class Application {
 
         //Create a generic bundle-list for all bundles
         $this->addLog("Creating bundle lists");
-        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/scripts/container-agent/main.js", "emudb-create-bundlelist"], $envVars);
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/container-agent/main.js", "emudb-create-bundlelist"], $envVars);
         $response = $this->handleContainerAgentResponse($cmdOutput);
         if($response->code == 200) {
             $this->addLog("Created bundlelists in EmuDB");
@@ -794,7 +794,7 @@ class Application {
         $this->addLog("Creating and linking annotation levels");
         //Create annoation levels
         foreach($form->annotLevels as $annotLevel) {
-            $cmd = ["/usr/bin/node", "/scripts/container-agent/main.js", "emudb-create-annotlevels"];
+            $cmd = ["/usr/bin/node", "/container-agent/main.js", "emudb-create-annotlevels"];
             $env["ANNOT_LEVEL_DEF_NAME"] = $annotLevel->name;
             $env["ANNOT_LEVEL_DEF_TYPE"] = $annotLevel->type;
 
@@ -807,7 +807,7 @@ class Application {
 
         //Create the links between annotation levels
         foreach($form->annotLevelLinks as $annotLevelLink) {
-            $cmd = ["/usr/bin/node", "/scripts/container-agent/main.js", "emudb-create-annotlevellinks"];
+            $cmd = ["/usr/bin/node", "/container-agent/main.js", "emudb-create-annotlevellinks"];
             $env["ANNOT_LEVEL_LINK_SUPER"] = $annotLevelLink->superLevel;
             $env["ANNOT_LEVEL_LINK_SUB"] = $annotLevelLink->subLevel;
             $env["ANNOT_LEVEL_LINK_DEF_TYPE"] = $annotLevelLink->type;
