@@ -59,6 +59,12 @@ class Application {
     function route() {
         $apiResponse = false;
         $reqPath = $_SERVER['REQUEST_URI'];
+        //Strip multiple leading /
+        while(strpos($reqPath, "/") === 0) {
+            $reqPath = substr($reqPath, 1);
+        }
+        $reqPath = "/".$reqPath;
+        
         $reqMethod = $_SERVER['REQUEST_METHOD'];
 
         //PUBLIC METHODS
@@ -76,7 +82,7 @@ class Application {
         //AUTH CONTROL - ALL METHODS BEYOND THIS POINT REQUIRES THE USER TO BE SIGNED-IN
         if(empty($_SESSION['authorized']) || $_SESSION['authorized'] !== true) {
             //if user has not passed a valid authentication, don't allow access to this API
-            $this->addLog("User not signed in - Authorization required for requested URL: ".$reqPath);
+            $this->addLog("User not signed in - Authorization required");
             $ar = new ApiResponse(401, "Authorization required");
             echo $ar->toJSON();
             exit();
