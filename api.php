@@ -76,7 +76,7 @@ class Application {
         //AUTH CONTROL - ALL METHODS BEYOND THIS POINT REQUIRES THE USER TO BE SIGNED-IN
         if(empty($_SESSION['authorized']) || $_SESSION['authorized'] !== true) {
             //if user has not passed a valid authentication, don't allow access to this API
-            $this->addLog("User not signed in - Authorization required");
+            $this->addLog("User not signed in - Authorization required for requested URL: ".$reqPath);
             $ar = new ApiResponse(401, "Authorization required");
             echo $ar->toJSON();
             exit();
