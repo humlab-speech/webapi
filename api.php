@@ -826,7 +826,7 @@ class Application {
         }
 
         //Set level canvases order
-        $env["ANNOT_LEVELS"] = json_encode($form->annotLevels);
+        $env["ANNOT_LEVELS"] = base64_encode(json_encode($form->annotLevels));
         $cmd = ["/usr/bin/node", "/container-agent/main.js", "emudb-setlevelcanvasesorder"];
         $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, $cmd, $env);
         $response = $this->handleContainerAgentResponse($cmdOutput);
