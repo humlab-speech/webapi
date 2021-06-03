@@ -824,6 +824,16 @@ class Application {
                 $this->addLog("Created annotation level links in EmuDB");
             }
         }
+
+        //Set level canvases order
+        $env["ANNOT_LEVELS"] = json_encode($form->annotLevels);
+        $cmd = ["/usr/bin/node", "/container-agent/main.js", "emudb-setlevelcanvasesorder"];
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, $cmd, $env);
+        $response = $this->handleContainerAgentResponse($cmdOutput);
+        if($response->code == 200) {
+            $this->addLog("Set level canvases order in EmuDB");
+        }
+        
     }
     
     function deleteGitlabProject($projectId) {
