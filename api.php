@@ -703,7 +703,9 @@ class Application {
         $sessionResponseDecoded = json_decode($sessionResponse->body);
         $sessionId = $sessionResponseDecoded->sessionAccessCode;
 
-        $envVars = ["PROJECT_PATH" => "/home/project-setup"];
+        $envVars = array();
+        $envVars["PROJECT_PATH"] = "/home/project-setup";
+        $envVars['EMUDB_SESSIONS'] = base64_encode(json_encode($form->sessions));
 
         if($form->standardDirectoryStructure) {
             $this->createStandardDirectoryStructure($sessionId, $envVars);
@@ -751,13 +753,12 @@ class Application {
         if($response->code == 200) {
             $this->addLog("Created EmuDB");
         }
-
-        //Just about here we want to include any uploaded files
-        $this->addLog("Importing wav files into project");
-        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/container-agent/main.js", "emudb-import-wavs"], $envVars);
+        
+        $this->addLog("Creating EmuDB sessions in project");
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/container-agent/main.js", "emudb-create-sessions"], $envVars);
         $response = $this->handleContainerAgentResponse($cmdOutput);
         if($response->code == 200) {
-            $this->addLog("Imported wav files into EmuDB");
+            $this->addLog("Created sessions in EmuDB");
         }
 
         //Create a generic bundle-list for all bundles
