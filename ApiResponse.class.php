@@ -10,7 +10,7 @@ class ApiResponse {
         $this->code = $code;
         $this->body = $body;
 
-        http_response_code($this->code);
+        //http_response_code($this->code);
     }
 
     function toJSON($jsonEncodeValues = true) {

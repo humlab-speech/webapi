@@ -81,16 +81,19 @@ class SessionManagerInterface {
         ];
         $this->app->addLog("Will request:".$sessionManagerApiRequest, "debug");
         $response = $this->app->httpRequest("POST", $sessionManagerApiRequest, $options);
+        
+        $sessionResponseDecoded = json_decode($response['body']);
+        $this->addSessionToRegistry($sessionResponseDecoded->sessionAccessCode);
 
         return new ApiResponse($response['code'], $response['body']);
     }
 
     /**
-     * Function: getSession
+     * Function: fetchSession
      * Creates a container for a new session bases on the specified project. Or returns the currenly active session if it exists.
      */
     function fetchSession($projectId, $hsApp = "rstudio") {
-        $this->app->addLog("Call: getSession(".$projectId.", ".$hsApp.")", "debug");
+        $this->app->addLog("Call: fetchSession(".$projectId.", ".$hsApp.")", "debug");
         $response = $this->_fetchGitlabProjectById($projectId);
         $project = $response['body'];
         
@@ -166,7 +169,7 @@ class SessionManagerInterface {
 
         $response = $this->app->httpRequest("POST", $sessionManagerApiRequest, $options);
         $this->app->addLog("runCommandInSession result:".print_r($response, true), "debug");
-        return new ApiResponse(200, $response);
+        return new ApiResponse(200, $response['body']);
     }
 
     function commitSession($appSessionId) {
@@ -176,8 +179,42 @@ class SessionManagerInterface {
         return new ApiResponse(200, $response['body']);
     }
 
+
+    function addSessionToRegistry($sessionId, $projectId = null) {
+        //Don't add again if it exists
+        foreach($_SESSION['sessions'] as $key => $session) {
+            if($session['sessionId'] == $sessionId) {
+                return false;
+            }
+        }
+        $session = ['sessionId' => $sessionId, 'projectId' => $projectId];
+        $_SESSION['sessions'] []= $sessionId;
+        return true;
+    }
+
+    function getSessionFromRegistryByProjectId($projectId) {
+        foreach($_SESSION['sessions'] as $key => $session) {
+            if($session['projectId'] == $projectId) {
+                return $session['sessionId'];
+            }
+        }
+        return false;
+    }
+
+    function removeSessionFromRegistry($sessionId) {
+        foreach($_SESSION['sessions'] as $key => $session) {
+            if($session['sessionId'] == $sessionId) {
+                unset($_SESSION['sessions'][$key]);
+                return true;
+            }
+        }
+        return false;
+    }
+
     function delSession($appSessionId) {
         $this->app->addLog("Call: delSession(".$appSessionId.")", "debug");
+        $this->removeSessionFromRegistry($appSessionId);
+
         $sessionManagerApiRequest = $this->sessionManagerApiEndpoint."/session/".$appSessionId."/delete";
         $response = $this->app->httpRequest("GET", $sessionManagerApiRequest, ['headers' => ['hs_api_access_token' => $this->hsApiAccessToken]]);
         return new ApiResponse(200, $response['body']);

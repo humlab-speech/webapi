@@ -113,6 +113,10 @@ class Application {
             if($matchResult['matched']) {
                 $apiResponse = $this->getProjectOperationsSession($matchResult['varMap']['project_id']);
             }
+            $matchResult = $this->restMatchPath($reqPath, "/api/v1/availibility/project/:project_id/session/:session_name");
+            if($matchResult['matched']) {
+                $apiResponse = $this->checkAvailabilityOfEmuSessionName($matchResult['varMap']['project_id'], $matchResult['varMap']['session_name']);
+            }
 
             if($apiResponse !== false) {
                 return $apiResponse->toJSON();
@@ -146,6 +150,14 @@ class Application {
                 //TODO: Perhaps verify that this user has the right to create a new project?
                 $apiResponse = $this->createProject($postData);
             }
+            
+            $matchResult = $this->restMatchPath($reqPath, "/api/v1/user/project/add");
+            if($matchResult['matched']) {
+                $this->addLog("POST: /api/v1/user/project/add", "debug");
+                //TODO: Perhaps verify that this user has the right to create a new project?
+                $apiResponse = $this->addSessionsToProject($postData);
+            }
+
             $matchResult = $this->restMatchPath($reqPath, "/api/v1/rstudio/session/please");
             if($matchResult['matched']) {
                 $this->addLog("POST: /api/v1/rstudio/session/please", "debug");
@@ -204,12 +216,32 @@ class Application {
         }
     }
 
+    /**
+     * Function: checkAvailabilityOfSessionName
+     * Check if this project name is available (not already taken) in the project
+     */
+    function checkAvailabilityOfEmuSessionName($projectId, $emuSessionName) {
+        $session = $this->sessionManagerInterface->getSessionFromRegistryByProjectId($projectId);
+        if($session === false) {
+            $ar = new ApiResponse(200, "No live session");
+            return $ar;
+        }
+        /*
+        $emuDbScanResult = $this->sessionManagerInterface->runCommandInSession(["/usr/bin/node", "/container-agent/main.js", "emudb-scan"]);
+        $this->addLog(print_r($emuDbScanResult, true), "debug");
+        $ar = new ApiResponse(200, print_r($emuDbScanResult, true));
+        */
+        $ar = new ApiResponse(200, "Not doing that");
+        return $ar;
+    }
+
     function getProjectOperationsSession($projectId) {
         $this->addLog("getProjectOperationsSession ".$projectId, "debug");
 
         $sessionResponse = $this->sessionManagerInterface->createSession($projectId, "operations");
         $sessionResponseDecoded = json_decode($sessionResponse->body);
         $sessionId = $sessionResponseDecoded->sessionAccessCode;
+
         $this->addLog("Created operations session ".$sessionId);
 
         $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/container-agent/main.js", "emudb-scan"], $envVars);
@@ -665,11 +697,72 @@ class Application {
         return $ar;
     }
 
+    function addSessionsToProject($postData) {
+        global $gitlabAddress, $gitlabRootAccessToken, $appRouterInterface;
+        $form = $postData->form;
+        $formContextId = $postData->context;
+        
+        $uploadsVolume = array(
+            'source' => getenv("ABS_ROOT_PATH")."/mounts/edge-router/apache/uploads/".$_SESSION['gitlabUser']->id."/".$formContextId,
+            'target' => '/home/uploads'
+        );
+
+        $volumes = array();
+        $volumes []= $uploadsVolume;
+
+        $this->createDirectory("/tmp/uploads/".$_SESSION['gitlabUser']->id."/".$formContextId);
+
+        $sessionResponse = $this->sessionManagerInterface->createSession($postData->projectId, "operations", $volumes);
+        $sessionResponseDecoded = json_decode($sessionResponse->body);
+        $sessionId = $sessionResponseDecoded->sessionAccessCode;
+
+        $envVars = array();
+        $envVars["PROJECT_PATH"] = "/home/rstudio/project";
+        $envVars['EMUDB_SESSIONS'] = base64_encode(json_encode($form->sessions));
+        $envVars['UPLOAD_PATH'] = "/home/uploads";
+
+        //Check here that any of the requested session names does not already exist!
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/container-agent/main.js", "emudb-scan"], $envVars);
+        $this->addLog("emudb-scan output: ".print_r($cmdOutput, true), "debug");
+        
+        $apiResponse = $cmdOutput;
+        $emuDb = json_decode($apiResponse->body);
+
+        foreach($emuDb->sessions as $session) {
+            foreach($form->sessions as $formSession) {
+                if($session->name == $formSession->name) {
+                    $this->addLog("Early shutdown of project container due to session name conflict");
+                    $cmdOutput = $this->sessionManagerInterface->delSession($sessionId);
+                    return new ApiResponse(400, "The session name '".$formSession->name."' already exists in the EmuDB.");
+                }
+            }
+        }
+
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/container-agent/main.js", "emudb-create-sessions"], $envVars);
+        $this->addLog("emudb-create-sessions output: ".print_r($cmdOutput, true), "debug");
+
+        $this->addLog("Creating bundle lists");
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/container-agent/main.js", "emudb-create-bundlelist"], $envVars);
+
+        //3. Commit & push
+        $this->addLog("Committing project");
+        $cmdOutput = $this->sessionManagerInterface->commitSession($sessionId);
+        
+        $this->addLog("Shutting down project creation container");
+        $cmdOutput = $this->sessionManagerInterface->delSession($sessionId);
+
+        return new ApiResponse(200, "Added sessions to project");
+    }
+
     function createProject($postData) {
         global $gitlabAddress, $gitlabRootAccessToken, $appRouterInterface;
 
         $form = $postData->form;
-        $createProjectContextId = $postData->context;
+        $formContextId = $postData->context;
+
+        foreach($form->sessions as $key => $session) {
+            $form->sessions[$key]->name = $this->sanitize($session->name);
+        }
 
         $response = $this->createGitlabProject($postData);
         if($response['code'] != 201) { //HTTP 201 == CREATED
@@ -681,7 +774,7 @@ class Application {
         array_push($_SESSION['gitlabProjects'], $project);
         
         $uploadsVolume = array(
-            'source' => getenv("ABS_ROOT_PATH")."/mounts/edge-router/apache/uploads/".$_SESSION['gitlabUser']->id."/".$createProjectContextId,
+            'source' => getenv("ABS_ROOT_PATH")."/mounts/edge-router/apache/uploads/".$_SESSION['gitlabUser']->id."/".$formContextId,
             'target' => '/home/uploads'
         );
 
@@ -696,7 +789,7 @@ class Application {
 
         //Make sure uploads volume exists for this user - it might not if this is the first time this user is creating a project and he/she did not upload any files
         //Note that this will create a dir inside the edge-router container, since that's where this is being executed
-        $this->createDirectory("/tmp/uploads/".$_SESSION['gitlabUser']->id."/".$createProjectContextId);
+        $this->createDirectory("/tmp/uploads/".$_SESSION['gitlabUser']->id."/".$formContextId);
 
         $this->addLog("Launching project create container");
         $sessionResponse = $this->sessionManagerInterface->createSession($project->id, "operations", $volumes);
@@ -706,6 +799,7 @@ class Application {
         $envVars = array();
         $envVars["PROJECT_PATH"] = "/home/project-setup";
         $envVars['EMUDB_SESSIONS'] = base64_encode(json_encode($form->sessions));
+        $envVars['UPLOAD_PATH'] = "/home/uploads";
 
         if($form->standardDirectoryStructure) {
             $this->createStandardDirectoryStructure($sessionId, $envVars);
@@ -755,21 +849,31 @@ class Application {
         }
         
         $this->addLog("Creating EmuDB sessions in project");
+        /*
+        $this->addLog("Would run:");
+        $this->addLog(print_r(["/usr/bin/node", "/container-agent/main.js", "emudb-create-sessions"], true));
+        $this->addLog(print_r($envVars, true));
+        */
         $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/container-agent/main.js", "emudb-create-sessions"], $envVars);
         $response = $this->handleContainerAgentResponse($cmdOutput);
         if($response->code == 200) {
             $this->addLog("Created sessions in EmuDB");
         }
-
+        
         //Create a generic bundle-list for all bundles
         $this->addLog("Creating bundle lists");
+        /*
+        $this->addLog("Would run:");
+        $this->addLog(print_r(["/usr/bin/node", "/container-agent/main.js", "emudb-create-bundlelist"], true));
+        $this->addLog(print_r($envVars, true));
+        */
         $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/container-agent/main.js", "emudb-create-bundlelist"], $envVars);
         $response = $this->handleContainerAgentResponse($cmdOutput);
         if($response->code == 200) {
             $this->addLog("Created bundlelists in EmuDB");
         }
 
-        $this->createAnnotLevelsInSession($sessionId, $form, $envVars);
+        //$this->createAnnotLevelsInSession($sessionId, $form, $envVars);
     }
     
     function createGitlabProject($postData) {
