@@ -59,11 +59,22 @@ class Application {
     function route() {
         $apiResponse = false;
         $reqPath = $_SERVER['REQUEST_URI'];
+
         //Strip multiple leading /
         while(strpos($reqPath, "/") === 0) {
             $reqPath = substr($reqPath, 1);
         }
         $reqPath = "/".$reqPath;
+
+        //Special case for letting the session-manager validate & retrieve a PHP session
+        if(isset($_GET['f']) && $_GET['f'] == "session") {
+            $this->addLog("Session validation for ".$_COOKIE['PHPSESSID']." - ".session_id(), "debug");
+            //This might seem strange since there's no apparent authentication, but the authentication is implicit since the session-manager
+            //must pass the correct PHPSESSID via a cookie header in order for the $_SESSION to be filled with the correct values
+            //otherwise a new empty session will be returned
+            $apiResponse = new ApiResponse(200, json_encode($_SESSION));
+            return $apiResponse->toJSON();
+        }
 
         $reqMethod = $_SERVER['REQUEST_METHOD'];
 
@@ -477,6 +488,7 @@ class Application {
             'fullName' => $_SESSION['firstName']." ".$_SESSION['lastName'],
             'email' => $_SESSION['email'],
             'gitlabUsername' => $this->getGitLabUsername($_SESSION['email']),
+            'id' => $_SESSION['gitlabUser']->id,
             'personalAccessToken' => $_SESSION['personalAccessToken']
         ];
     
