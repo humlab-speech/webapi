@@ -885,7 +885,7 @@ class Application {
             $this->addLog("Created bundlelists in EmuDB");
         }
 
-        //$this->createAnnotLevelsInSession($sessionId, $form, $envVars);
+        $this->createAnnotLevelsInSession($sessionId, $form, $envVars);
     }
     
     function createGitlabProject($postData) {
@@ -950,7 +950,22 @@ class Application {
         if($response->code == 200) {
             $this->addLog("Set level canvases order in EmuDB");
         }
-        
+
+        //Add perspectives
+        $cmd = ["/usr/bin/node", "/container-agent/main.js", "emudb-add-default-perspectives"];
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, $cmd, $env);
+        $response = $this->handleContainerAgentResponse($cmdOutput);
+        if($response->code == 200) {
+            $this->addLog("Add default perspectives in EmuDB");
+        }
+
+        //Add ssff tracks
+        $cmd = ["/usr/bin/node", "/container-agent/main.js", "emudb-ssff-track-definitions"];
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, $cmd, $env);
+        $response = $this->handleContainerAgentResponse($cmdOutput);
+        if($response->code == 200) {
+            $this->addLog("Add ssff tracks in EmuDB");
+        }
     }
     
     function deleteGitlabProject($projectId) {
