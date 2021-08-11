@@ -68,10 +68,11 @@ class Application {
 
         //Special case for letting the session-manager validate & retrieve a PHP session
         if(isset($_GET['f']) && $_GET['f'] == "session") {
-            $this->addLog("Session validation for ".$_COOKIE['PHPSESSID']." - ".session_id(), "debug");
+            $this->addLog("Session validation for ".$_COOKIE['PHPSESSID']." - ".session_id(), "debug");            
             //This might seem strange since there's no apparent authentication, but the authentication is implicit since the session-manager
             //must pass the correct PHPSESSID via a cookie header in order for the $_SESSION to be filled with the correct values
             //otherwise a new empty session will be returned
+
             $apiResponse = new ApiResponse(200, json_encode($_SESSION));
             return $apiResponse->toJSON();
         }
@@ -487,7 +488,7 @@ class Application {
             'lastName' => $_SESSION['lastName'],
             'fullName' => $_SESSION['firstName']." ".$_SESSION['lastName'],
             'email' => $_SESSION['email'],
-            'gitlabUsername' => $this->getGitLabUsername($_SESSION['email']),
+            'username' => $this->getGitLabUsername($_SESSION['email']),
             'id' => $_SESSION['gitlabUser']->id,
             'personalAccessToken' => $_SESSION['personalAccessToken']
         ];
@@ -652,6 +653,7 @@ class Application {
             }
             else {
                 $_SESSION['gitlabUser'] = $userList[0];
+                $_SESSION['id'] = $_SESSION['gitlabUser']->id;
                 $ar->body = $userList[0];
             }
         }
