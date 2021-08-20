@@ -65,7 +65,7 @@ class Application {
             $reqPath = substr($reqPath, 1);
         }
         $reqPath = "/".$reqPath;
-
+        
         //Special case for letting the session-manager validate & retrieve a PHP session
         if(isset($_GET['f']) && $_GET['f'] == "session") {
             $this->addLog("Session validation for ".$_COOKIE['PHPSESSID']." - ".session_id(), "debug");            

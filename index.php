@@ -25,6 +25,8 @@ if($shibHeadersFound) {
     $_SESSION['lastName'] = $_SERVER[$attributePrefix.'sn'];
     $_SESSION['username'] = $_SERVER[$attributePrefix.'eppn_replaced'];
     $_SESSION['fullName'] = $_SESSION['firstName']." ".$_SESSION['lastName'];
+    $_SESSION['eppn'] = $_SERVER[$attributePrefix.'eppn_keycloak'];
+
 
     if(!empty($_SERVER[$attributePrefix.'email'])) {
         $_SESSION['email'] = $_SERVER[$attributePrefix.'email'];
