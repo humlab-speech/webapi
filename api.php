@@ -190,6 +190,16 @@ class Application {
                     $apiResponse = new ApiResponse(401, array('message' => 'This user does not have access to that project.'));
                 }
             }
+            $matchResult = $this->restMatchPath($reqPath, "/api/v1/vscode/session/please");
+            if($matchResult['matched']) {
+                $this->addLog("POST: /api/v1/vscode/session/please", "debug");
+                if($this->userHasProjectAuthorization($postData->projectId)) {
+                    $apiResponse = $this->sessionManagerInterface->fetchSession($postData->projectId, "vscode");
+                }
+                else {
+                    $apiResponse = new ApiResponse(401, array('message' => 'This user does not have access to that project.'));
+                }
+            }
             $matchResult = $this->restMatchPath($reqPath, "/api/v1/emu-webapp/session/please");
             if($matchResult['matched']) {
                 $this->addLog("POST: /api/v1/emu-webapp/session/please", "debug");
