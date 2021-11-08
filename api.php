@@ -433,10 +433,12 @@ class Application {
 
     function createDirectory($targetDir) {
         if(!is_dir($targetDir)) {
-            umask(0);
-            $mkdirResult = mkdir($targetDir, 0777, true);
+            $oldUmask = umask(0);
+            $mkdirResult = mkdir($targetDir, 0700, true);
+            umask($oldUmask);
             if(!$mkdirResult) {
-                $this->addLog("Failed creating upload destination! : ".$targetDir." As user: ".get_current_user()." (".getmyuid().")", "error");
+                $processUser = posix_getpwuid(posix_geteuid());
+                $this->addLog("Failed creating upload destination! : ".$targetDir." As user: ".$processUser['name'], "error");
             }
             return $mkdirResult;
         }
