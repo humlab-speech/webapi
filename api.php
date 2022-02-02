@@ -8,7 +8,6 @@ use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\ClientException;
 use MongoDB\Client;
 
-
 $domain = getenv("HS_DOMAIN_NAME");
 session_set_cookie_params(60*60*8, "/", ".".$domain);
 session_start();
@@ -398,6 +397,59 @@ class Application {
     }
     
     function handleUpload() {
+        $this->addLog("handleUpload", "debug");
+        /*
+        file_put_contents("FILES.dump", print_r($_FILES, true));
+        file_put_contents("POST.dump", print_r($_POST, true));
+        return;
+        */
+
+        $fileMeta = json_decode($_POST['fileMeta']);
+        $fileName = $fileMeta->filename;
+        $group = $fileMeta->group;
+        $context = $fileMeta->context;
+
+        $fileName = $this->sanitize($fileName);
+        $group = $this->sanitize($group);
+
+        $this->addLog("Received upload file with filename '".$fileName."'");
+        $this->addLog("Post-sanitization filename: ".$fileName, "debug");
+        $this->addLog("Post-sanitization group name: ".$group, "debug");
+
+        $targetDir = "/tmp/uploads/".$_SESSION['gitlabUser']->id."/".$context."/".$group;
+        $this->createDirectory($targetDir);
+        move_uploaded_file($_FILES['fileData']['tmp_name'], $targetDir."/".$fileName);
+
+        $this->addLog("File moved to dest: ".$targetDir."/".$fileName, "debug");
+
+        $this->addLog("File Type: ".$_FILES['fileData']['type'], "debug");
+        
+        if($_FILES['fileData']['type'] == "application/x-zip-compressed" || $_FILES['fileData']['type'] == "application/zip") {
+            $this->addLog("File ".$fileName." is zipped, unzipping", "debug");
+            $zip = new ZipArchive();
+            $result = $zip->open($targetDir."/".$fileName);
+            if($result === true) {
+                //$fileBaseName = pathinfo($fileName, PATHINFO_FILENAME);
+                //$fileExt = pathinfo($fileName, PATHINFO_EXTENSION);
+                //$unzipppedFileName = $fileBaseName.".wav";
+                $zip->extractTo($targetDir."/");
+                $zip->close();
+                //Delete original zip file
+                //unlink($targetDir."/".$fileName);
+
+                $this->addLog("File unzipped to: ".$targetDir."/", "debug");
+            }
+            else {
+                //Failed
+                $this->addLog("Could not open uploaded zip archive!", "error");
+            }
+        }
+
+        $ar = new ApiResponse(200);
+        return $ar;
+    }
+
+    function handleUploadOld() {
         $this->addLog("handleUpload", "debug");
         $data = json_decode($_POST['data']);
         $this->addLog("Received upload request of file with filename '".$data->filename."'");
