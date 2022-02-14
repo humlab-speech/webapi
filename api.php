@@ -158,14 +158,12 @@ class Application {
             $matchResult = $this->restMatchPath($reqPath, "/api/v1/user/project");
             if($matchResult['matched']) {
                 $this->addLog("POST: /api/v1/user/project", "debug");
-                //TODO: Perhaps verify that this user has the right to create a new project?
                 $apiResponse = $this->createProject($postData);
             }
             
             $matchResult = $this->restMatchPath($reqPath, "/api/v1/user/project/add");
             if($matchResult['matched']) {
                 $this->addLog("POST: /api/v1/user/project/add", "debug");
-                //TODO: Perhaps verify that this user has the right to create a new project?
                 $apiResponse = $this->addSessionsToProject($postData);
             }
 
@@ -398,11 +396,13 @@ class Application {
     
     function handleUpload() {
         $this->addLog("handleUpload", "debug");
-        /*
-        file_put_contents("FILES.dump", print_r($_FILES, true));
-        file_put_contents("POST.dump", print_r($_POST, true));
-        return;
-        */
+        
+        if(empty($_POST['fileMeta'])) {
+            $date = date("Y-m-d H:i:s");
+            mkdir("debug");
+            file_put_contents("debug/FILES-".$_SESSION['gitlabUser']->id."-".$date.".dump", print_r($_FILES, true));
+            file_put_contents("debug/POST-".$_SESSION['gitlabUser']->id."-".$date.".dump", print_r($_POST, true));
+        }
 
         $fileMeta = json_decode($_POST['fileMeta']);
         $fileName = $fileMeta->filename;
@@ -425,28 +425,112 @@ class Application {
         $this->addLog("File Type: ".$_FILES['fileData']['type'], "debug");
         
         if($_FILES['fileData']['type'] == "application/x-zip-compressed" || $_FILES['fileData']['type'] == "application/zip") {
-            $this->addLog("File ".$fileName." is zipped, unzipping", "debug");
-            $zip = new ZipArchive();
-            $result = $zip->open($targetDir."/".$fileName);
-            if($result === true) {
-                //$fileBaseName = pathinfo($fileName, PATHINFO_FILENAME);
-                //$fileExt = pathinfo($fileName, PATHINFO_EXTENSION);
-                //$unzipppedFileName = $fileBaseName.".wav";
-                $zip->extractTo($targetDir."/");
-                $zip->close();
-                //Delete original zip file
-                //unlink($targetDir."/".$fileName);
-
-                $this->addLog("File unzipped to: ".$targetDir."/", "debug");
-            }
-            else {
-                //Failed
-                $this->addLog("Could not open uploaded zip archive!", "error");
-            }
+            $this->handleZipArchive($fileName, $targetDir);
         }
 
         $ar = new ApiResponse(200);
         return $ar;
+    }
+
+    function rrmdir($dir) { 
+        if (is_dir($dir)) { 
+          $objects = scandir($dir);
+          foreach ($objects as $object) { 
+            if ($object != "." && $object != "..") { 
+              if (is_dir($dir. DIRECTORY_SEPARATOR .$object) && !is_link($dir."/".$object))
+                $this->rrmdir($dir. DIRECTORY_SEPARATOR .$object);
+              else
+                unlink($dir. DIRECTORY_SEPARATOR .$object); 
+            } 
+          }
+          rmdir($dir); 
+        } 
+      }
+
+    function handleZipArchive($archiveFile, $targetDir) {
+        $this->addLog("File ".$archiveFile." is zipped, unzipping", "debug");
+        $zip = new ZipArchive();
+        $result = $zip->open($targetDir."/".$archiveFile); //might contain multiple files
+        if($result === true) {
+            $zip->extractTo($targetDir."/");
+            $zip->close();
+            
+            $dir = array_diff(scandir($targetDir), array('..', '.'));
+            $this->addLog("File unzipped to: ".$targetDir."/", "debug");
+            $this->addLog("Archive files: ".implode(", ", $dir)."/", "debug");
+    
+            //delete these suckers
+            foreach($dir as $dirItem) {
+                if($dirItem == "__MACOSX") {
+                    $this->rrmdir($targetDir."/".$dirItem);
+                }
+            }
+            $dir = array_diff($dir, array('__MACOSX'));
+
+            //If the zip archive is actually a zipped directory,
+            foreach($dir as $dirItem) {
+                if(is_dir($targetDir."/".$dirItem)) {
+                    $filesInDir = array_diff(scandir($targetDir."/".$dirItem), array('..', '.'));
+                    foreach($filesInDir as $fileInDir) {
+                        if(is_dir($targetDir."/".$dirItem."/".$fileInDir)) {
+                            $this->rrmdir($targetDir."/".$dirItem."/".$fileInDir);
+                            continue;
+                        }
+                        copy($targetDir."/".$dirItem."/".$fileInDir, $targetDir."/".$fileInDir);
+                        unlink($targetDir."/".$dirItem."/".$fileInDir);
+                    }
+                    rmdir($targetDir."/".$dirItem);
+                }
+            }
+            $destFiles = array_diff(scandir($targetDir), array('..', '.'));
+
+            foreach($destFiles as $dirItem) {
+                $mimeType = mime_content_type($targetDir."/".$dirItem);
+                if($mimeType != "audio/x-wav") {
+                    unlink($targetDir."/".$dirItem);
+                    $this->addLog("Deleted non-wav file in upload: File: ".$dirItem." Type: ".$mimeType);
+                }
+            }
+            
+            //Delete original zip file
+            unlink($archiveFile);
+        }
+        else {
+            //Failed
+            $this->addLog("Could not open uploaded zip archive!", "error");
+            
+            switch($result) {
+                case ZipArchive::ER_EXISTS;
+                    $this->addLog("ZipArchive: File already exists.", "error");
+                    break;
+                case ZipArchive::ER_INCONS;
+                    $this->addLog("ZipArchive: Zip archive inconsistent.", "error");
+                    break;
+                case ZipArchive::ER_INVAL;
+                    $this->addLog("ZipArchive: Invalid argument.", "error");
+                    break;
+                case ZipArchive::ER_MEMORY;
+                    $this->addLog("ZipArchive: Malloc failure.", "error");
+                    break;
+                case ZipArchive::ER_NOENT;
+                    $this->addLog("ZipArchive: No such file.", "error");
+                    break;
+                case ZipArchive::ER_NOZIP;
+                    $this->addLog("ZipArchive: Not a zip archive.", "error");
+                    break;
+                case ZipArchive::ER_OPEN;
+                    $this->addLog("ZipArchive: Can't open file.", "error");
+                    break;
+                case ZipArchive::ER_READ;
+                    $this->addLog("ZipArchive: Read error.", "error");
+                    break;
+                case ZipArchive::ER_SEEK;
+                    $this->addLog("ZipArchive: Seek error.", "error");
+                    break;
+            }
+            
+            
+        }
     }
 
     function handleUploadOld() {
