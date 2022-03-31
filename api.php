@@ -140,6 +140,18 @@ class Application {
                 $postData = json_decode($_POST['data']);
             }
 
+            $matchResult = $this->restMatchPath($reqPath, "/api/v1/project/member/add");
+            if($matchResult['matched']) {
+                $this->addLog("POST: /api/v1/project/member/add", "debug");
+                $apiResponse = $this->addProjectMember($postData->projectId, $postData->userId);
+            }
+
+            $matchResult = $this->restMatchPath($reqPath, "/api/v1/project/member/del");
+            if($matchResult['matched']) {
+                $this->addLog("POST: /api/v1/project/member/del", "debug");
+                $apiResponse = $this->removeProjectMember($postData->projectId, $postData->userId);
+            }
+
             $matchResult = $this->restMatchPath($reqPath, "/api/v1/upload");
             if($matchResult['matched']) {
                 $this->addLog("POST: /api/v1/upload", "debug");
@@ -233,6 +245,53 @@ class Application {
             }
             return $apiResponse->toJSON();
         }
+    }
+
+    function addProjectMember($projectId, $userId) {
+        global $gitlabAddress;
+        if(empty($_SESSION['personalAccessToken'])) {
+            $this->createPersonalAccessToken();
+        }
+
+        $gitlabApiRequest = $gitlabAddress."/api/v4/projects/".$projectId."/members?&private_token=".$_SESSION['personalAccessToken'];
+
+        $options = [
+            'form_params' => [
+                'user_id' => $userId,
+                'access_level' => 30
+            ]
+        ];
+        $response = $this->httpRequest("POST", $gitlabApiRequest, $options);
+        if($response) {
+            $result = json_decode($response['body']);
+        }
+        else {
+            $result = $response;
+        }
+    
+        $ar = new ApiResponse($response['code'], $result);
+        return $ar;
+    }
+
+    function removeProjectMember($projectId, $userId) {
+        global $gitlabAddress;
+        if(empty($_SESSION['personalAccessToken'])) {
+            $this->createPersonalAccessToken();
+        }
+        
+        //DELETE /projects/:id/members/:user_id
+        $gitlabApiRequest = $gitlabAddress."/api/v4/projects/".$projectId."/members/".$userId."?&private_token=".$_SESSION['personalAccessToken'];
+
+        $response = $this->httpRequest("DELETE", $gitlabApiRequest);
+        if($response) {
+            $result = json_decode($response['body']);
+        }
+        else {
+            $result = $response;
+        }
+    
+        $ar = new ApiResponse($response['code'], $result);
+        return $ar;
     }
 
     /**
@@ -838,10 +897,10 @@ class Application {
         $projects = json_decode($response['body']);
         $_SESSION['gitlabProjects'] = $projects;
         
-        //Also check if any of these projects have an active running session in the rstudio-router via its API
+        //Also check if any of these projects have an active running session in the session-manager via its API
         $sessions = $this->sessionManagerInterface->_getSessions();
         if($sessions === false) {
-            $this->addLog("AppRouter sessions returned false!", "error");
+            $this->addLog("Session manager sessions returned false!", "error");
             $sessions = [];
         }
 
