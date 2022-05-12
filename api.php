@@ -860,6 +860,13 @@ class Application {
             }
             else {
                 $_SESSION['gitlabUser'] = $userList[0];
+                
+                if($_SESSION['gitlabUser']->state == "blocked_pending_approval") {
+                    //If this user tried to login to gitlab before the main site they will have ended up with a blocked user in gitlab, so unblock it here
+                    $gitlabApiRequest = $gitlabAddress."/api/v4/users/".$_SESSION['gitlabUser']->id."/unblock?private_token=".$gitlabRootAccessToken;
+                    $response = $this->httpRequest("POST", $gitlabApiRequest);
+                }
+                
                 $_SESSION['id'] = $_SESSION['gitlabUser']->id;
                 $ar->body = $userList[0];
             }
