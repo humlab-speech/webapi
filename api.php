@@ -334,7 +334,7 @@ class Application {
     function getMongoDb() {
         $mongoPass = getenv("MONGO_ROOT_PASSWORD");
         $client = new Client("mongodb://root:".$mongoPass."@mongo");
-        $database = $client->selectDatabase('humlab_speech');
+        $database = $client->selectDatabase('visp');
         return $database;
     }
 
@@ -1036,8 +1036,8 @@ class Application {
             }
         }
 
-        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/container-agent/main.js", "full-recursive-copy", $envVars["PROJECT_PATH"], "/home/rstudio/project"], $envVars);
-        $this->addLog("copy-dir-output: ".print_r($cmdOutput, true), "debug");        
+        $cmdOutput = $this->sessionManagerInterface->runCommandInSession($sessionId, ["/usr/bin/node", "/container-agent/main.js", "full-recursive-copy", $envVars["PROJECT_PATH"], "/home/rstudio/project", "rstudio"], $envVars);
+        $this->addLog("copy-dir-output: ".print_r($cmdOutput, true), "debug");
 
         //3. Commit & push
         $this->addLog("Committing project");
