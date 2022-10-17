@@ -54,5 +54,5 @@ if(!empty(getenv("TEST_USER_LOGIN_KEY")) && $_GET['login'] == getenv("TEST_USER_
     $_SESSION['authorized'] = true;
 }
 
-include("../index.html");
+include("./index.html");
 ?>
