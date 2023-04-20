@@ -202,6 +202,9 @@ class SessionManagerInterface {
     }
 
     function removeSessionFromRegistry($sessionId) {
+        if(!is_array($_SESSION['sessions'])) {
+            return false;
+        }
         foreach($_SESSION['sessions'] as $key => $session) {
             if($session['sessionId'] == $sessionId) {
                 unset($_SESSION['sessions'][$key]);

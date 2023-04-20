@@ -1,3 +1,4 @@
 .vscode
 ./vendor/
 index.php-access.log
+webapi.code-workspace

@@ -71,6 +71,7 @@ class Application {
             //This might seem strange since there's no apparent authentication, but the authentication is implicit since the session-manager
             //must pass the correct PHPSESSID via a cookie header in order for the $_SESSION to be filled with the correct values
             //otherwise a new empty session will be returned
+            //$this->addLog(print_r($_SESSION, true));
 
             $apiResponse = new ApiResponse(200, json_encode($_SESSION));
             return $apiResponse->toJSON();
@@ -100,6 +101,15 @@ class Application {
         }
 
         if($reqMethod == "GET") {
+
+            /*
+            $matchResult = $this->restMatchPath($reqPath, "/api/v1/test");
+            if($matchResult['matched']) {
+                $apiResponse = $this->getGitlabUser();
+                $gitlabUser = $apiResponse->body;
+                $apiResponse = $this->addUserToGitlabProjects($gitlabUser);
+            }
+            */
             $matchResult = $this->restMatchPath($reqPath, "/api/v1/personalaccesstoken");
             if($matchResult['matched']) {
                 $apiResponse = $this->getPersonalAccessToken();
@@ -127,6 +137,11 @@ class Application {
             $matchResult = $this->restMatchPath($reqPath, "/api/v1/availibility/project/:project_id/session/:session_name");
             if($matchResult['matched']) {
                 $apiResponse = $this->checkAvailabilityOfEmuSessionName($matchResult['varMap']['project_id'], $matchResult['varMap']['session_name']);
+            }
+            $matchResult = $this->restMatchPath($reqPath, "/api/v1/gitlabtoken");
+            if($matchResult['matched']) {
+                $this->addLog("GET: /api/v1/gitlabtoken", "debug");
+                $apiResponse = $this->fetchGitlabAccessToken();
             }
 
             if($apiResponse !== false) {
@@ -179,6 +194,17 @@ class Application {
                 $apiResponse = $this->addSessionsToProject($postData);
             }
 
+            
+            $matchResult = $this->restMatchPath($reqPath, "/api/v1/operations/session/please");
+            if($matchResult['matched']) {
+                $this->addLog("POST: /api/v1/operations/session/please", "debug");
+                if($this->userHasProjectAuthorization($postData->projectId)) {
+                    $apiResponse = $this->sessionManagerInterface->fetchSession($postData->projectId, "operations");
+                }
+                else {
+                    $apiResponse = new ApiResponse(401, array('message' => 'This user does not have access to that project.'));
+                }
+            }
             $matchResult = $this->restMatchPath($reqPath, "/api/v1/rstudio/session/please");
             if($matchResult['matched']) {
                 $this->addLog("POST: /api/v1/rstudio/session/please", "debug");
@@ -247,13 +273,40 @@ class Application {
         }
     }
 
-    function addProjectMember($projectId, $userId) {
+    function fetchGitlabAccessToken() {
+        if(!empty($_SESSION['personalAccessToken'])) {
+            return new ApiResponse(200, $_SESSION['personalAccessToken']);
+        }
+        else {
+            if(isset($_SESSION['gitlabUser'])) {
+                $token = $this->getPersonalAccessTokenFromStorage($_SESSION['gitlabUser']->id);
+                if($token) {
+                    return $token;
+                }
+            }
+            else {
+                return $this->createPersonalAccessToken();
+            }
+        }
+    }
+
+    function addProjectMember($projectId, $userId, $pat = null) {
         global $gitlabAddress;
-        if(empty($_SESSION['personalAccessToken'])) {
-            $this->createPersonalAccessToken();
+
+        $personalAccessToken = null;
+        if($pat != null) {
+            $personalAccessToken = $pat;
+        }
+        else {
+            $personalAccessToken = $_SESSION['personalAccessToken'];
         }
 
-        $gitlabApiRequest = $gitlabAddress."/api/v4/projects/".$projectId."/members?&private_token=".$_SESSION['personalAccessToken'];
+        if(empty($personalAccessToken)) {
+            $this->createPersonalAccessToken();
+            $personalAccessToken = $_SESSION['personalAccessToken'];
+        }
+
+        $gitlabApiRequest = $gitlabAddress."/api/v4/projects/".$projectId."/members?&private_token=".$personalAccessToken;
 
         $options = [
             'form_params' => [
@@ -650,8 +703,9 @@ class Application {
             );
         }
         session_destroy();
+        //header("Location: https://gitlab.".$_SERVER['HTTP_HOST']."/users/sign_out");
         header("Location: https://".$_SERVER['HTTP_HOST']);
-
+        
         return false;
     }
     
@@ -727,6 +781,11 @@ class Application {
         if($response['code'] == 201) {
             $userApiResponseObject = json_decode($this->getGitlabUser());
             $gitlabUser = $userApiResponseObject->body;
+
+            //check if this user should be added to any gitlab projects
+            $this->addUserToGitlabProjects($gitlabUser);
+
+
             $ar = new ApiResponse($response['code'], $gitlabUser);
         }
         else {
@@ -734,6 +793,28 @@ class Application {
         }
     
         return $ar;
+    }
+
+    function addUserToGitlabProjects($gitlabUser) {
+        $this->addLog("addUserToGitlabProjects");
+        //fetch from mongodb
+        $database = $this->getMongoDb();
+        $collection = $database->selectCollection('users');
+        $cursor = $collection->findOne(["eppn" => $_SESSION['eppn']]);
+
+        if($cursor == null) { //empty result / not found
+            $this->addLog("addUserToGitlabProjects: No user found in database with eppn ".$_SESSION['eppn'], "debug");
+            return;
+        }
+
+        $user = json_decode(json_encode(iterator_to_array($cursor)), TRUE); //this is so dumb... but it works
+
+        if(!empty($user['initial_projects'])) {
+            foreach($user['initial_projects'] as $projectId) {
+                $this->addLog("Adding user ".$_SESSION['eppn']." (".$gitlabUser->id.") to project ".$projectId, "debug");
+                $this->addProjectMember($projectId, $gitlabUser->id, $_SESSION['personalAccessToken']);
+            }
+        }
     }
 
     function deleteAllPersonalAccessTokens($onlySystemTokens = true) {
