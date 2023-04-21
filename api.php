@@ -306,7 +306,7 @@ class Application {
             $personalAccessToken = $_SESSION['personalAccessToken'];
         }
 
-        $gitlabApiRequest = $gitlabAddress."/api/v4/projects/".$projectId."/members?&private_token=".$personalAccessToken;
+        $gitlabApiRequest = $gitlabAddress."/api/v4/projects/".$projectId."/members?private_token=".$personalAccessToken;
 
         $options = [
             'form_params' => [
@@ -779,13 +779,12 @@ class Application {
         $response = $this->httpRequest("POST", $gitlabApiRequest, $options); 
     
         if($response['code'] == 201) {
-            $userApiResponseObject = json_decode($this->getGitlabUser());
+            $userApiResponseObject = $this->getGitlabUser();
             $gitlabUser = $userApiResponseObject->body;
 
             //check if this user should be added to any gitlab projects
             $this->addUserToGitlabProjects($gitlabUser);
-
-
+            
             $ar = new ApiResponse($response['code'], $gitlabUser);
         }
         else {
@@ -796,6 +795,7 @@ class Application {
     }
 
     function addUserToGitlabProjects($gitlabUser) {
+        global $gitlabRootAccessToken;
         $this->addLog("addUserToGitlabProjects");
         //fetch from mongodb
         $database = $this->getMongoDb();
@@ -812,7 +812,7 @@ class Application {
         if(!empty($user['initial_projects'])) {
             foreach($user['initial_projects'] as $projectId) {
                 $this->addLog("Adding user ".$_SESSION['eppn']." (".$gitlabUser->id.") to project ".$projectId, "debug");
-                $this->addProjectMember($projectId, $gitlabUser->id, $_SESSION['personalAccessToken']);
+                $this->addProjectMember($projectId, $gitlabUser->id, $gitlabRootAccessToken);
             }
         }
     }
