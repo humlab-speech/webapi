@@ -8,6 +8,7 @@ use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\ClientException;
 use MongoDB\Client;
 
+
 $domain = getenv("HS_DOMAIN_NAME");
 session_set_cookie_params(60*60*8, "/", ".".$domain);
 session_start();
@@ -16,8 +17,10 @@ $gitlabAddress = "http://gitlab:80";
 $gitlabRootAccessToken = getenv("GIT_API_ACCESS_TOKEN");
 $hsApiAccessToken = getenv("HS_API_ACCESS_TOKEN");
 
+
+
 class Application {
-    function __construct() {
+    function __construct($domain) {
         global $hsApiAccessToken;
         $this->sessionManagerInterface = new SessionManagerInterface($this, $hsApiAccessToken);
     }
@@ -41,7 +44,8 @@ class Application {
         }
 
         $regexp = "/".str_replace("/", "\/", $regexp)."/";
-        $regexp = preg_replace("/(:[a-z0-9_]*)/", "([a-z0-9_]*)", $regexp);
+        $regexp = preg_replace("/(:[a-z0-9_]*)/", "([a-zA-Z0-9_\\.]*)", $regexp);
+
         $matches = null;
         $match = preg_match($regexp, $path, $matches);
         if($match) {
@@ -49,11 +53,13 @@ class Application {
             foreach($varMatches as $key => $vm) {
                 $varMap[$vm] = $matches[$key+1];
             }
-
+            
             return ['matched' => true, 'varMap' => $varMap];
         }
+
         return ['matched' => false];
     }
+    
 
     function route() {
         $apiResponse = false;
@@ -67,11 +73,19 @@ class Application {
         
         //Special case for letting the session-manager validate & retrieve a PHP session
         if(isset($_GET['f']) && $_GET['f'] == "session") {
-            $this->addLog("Session validation for ".$_COOKIE['PHPSESSID']." - ".session_id(), "debug");            
+            $this->addLog("Session validation for ".$_COOKIE['PHPSESSID']." - ".session_id(), "debug");       
             //This might seem strange since there's no apparent authentication, but the authentication is implicit since the session-manager
             //must pass the correct PHPSESSID via a cookie header in order for the $_SESSION to be filled with the correct values
             //otherwise a new empty session will be returned
             //$this->addLog(print_r($_SESSION, true));
+
+            if(!empty($_GET['projectId'])) {
+                //if projectId is set, we also need to check that this user has access to that project
+                if(!$this->userHasProjectAuthorization($_GET['projectId'])) {
+                    $ar = new ApiResponse(401, array('message' => 'This user does not have access to that project.'));
+                    return $ar->toJSON();
+                }
+            }
 
             $apiResponse = new ApiResponse(200, json_encode($_SESSION));
             return $apiResponse->toJSON();
@@ -95,12 +109,18 @@ class Application {
         if(empty($_SESSION['authorized']) || $_SESSION['authorized'] !== true) {
             //if user has not passed a valid authentication, don't allow access to this API
             $this->addLog("User not signed in - Authorization required");
+            $this->addLog("cookies: ".print_r($_COOKIE, true), "debug");
+            $this->addLog("session_id: ".session_id(), "debug");
+            $this->addLog("session_id: ".session_id(), "debug");
+            $this->addLog("session_id: ".session_id(), "debug");
             $ar = new ApiResponse(401, "Authorization required");
             echo $ar->toJSON();
             exit();
         }
 
         if($reqMethod == "GET") {
+
+            $this->addLog("GET: ".$reqPath, "debug");
 
             /*
             $matchResult = $this->restMatchPath($reqPath, "/api/v1/test");
@@ -110,26 +130,33 @@ class Application {
                 $apiResponse = $this->addUserToGitlabProjects($gitlabUser);
             }
             */
+            /*
             $matchResult = $this->restMatchPath($reqPath, "/api/v1/personalaccesstoken");
             if($matchResult['matched']) {
                 $apiResponse = $this->getPersonalAccessToken();
             }
+            */
+            /*
             $matchResult = $this->restMatchPath($reqPath, "/api/v1/user");
             if($matchResult['matched']) {
                 $apiResponse = $this->getGitlabUser();
             }
+            */
             $matchResult = $this->restMatchPath($reqPath, "/api/v1/session");
             if($matchResult['matched']) {
                 $apiResponse = $this->getUserSessionAttributes();
             }
+            /*
             $matchResult = $this->restMatchPath($reqPath, "/api/v1/user/project");
             if($matchResult['matched']) {
                 $apiResponse = $this->getGitlabUserProjects();
             }
+            */
             $matchResult = $this->restMatchPath($reqPath, "/api/v1/signout");
             if($matchResult['matched']) {
                 $apiResponse = $this->signOut();
             }
+            /*
             $matchResult = $this->restMatchPath($reqPath, "/api/v1/user/project/:project_id/session");
             if($matchResult['matched']) {
                 $apiResponse = $this->getProjectOperationsSession($matchResult['varMap']['project_id']);
@@ -143,6 +170,7 @@ class Application {
                 $this->addLog("GET: /api/v1/gitlabtoken", "debug");
                 $apiResponse = $this->fetchGitlabAccessToken();
             }
+            */
 
             if($apiResponse !== false) {
                 return $apiResponse->toJSON();
@@ -154,7 +182,7 @@ class Application {
             if(!empty($_POST['data'])) {
                 $postData = json_decode($_POST['data']);
             }
-
+            /*
             $matchResult = $this->restMatchPath($reqPath, "/api/v1/project/member/add");
             if($matchResult['matched']) {
                 $this->addLog("POST: /api/v1/project/member/add", "debug");
@@ -166,12 +194,13 @@ class Application {
                 $this->addLog("POST: /api/v1/project/member/del", "debug");
                 $apiResponse = $this->removeProjectMember($postData->projectId, $postData->userId);
             }
-
+            */
             $matchResult = $this->restMatchPath($reqPath, "/api/v1/upload");
             if($matchResult['matched']) {
                 $this->addLog("POST: /api/v1/upload", "debug");
                 $apiResponse = $this->handleUpload();
             }
+            /*
             $matchResult = $this->restMatchPath($reqPath, "/api/v1/personalaccesstoken");
             if($matchResult['matched']) {
                 $this->addLog("POST: /api/v1/personalaccesstoken", "debug");
@@ -193,7 +222,7 @@ class Application {
                 $this->addLog("POST: /api/v1/user/project/add", "debug");
                 $apiResponse = $this->addSessionsToProject($postData);
             }
-
+            */
             
             $matchResult = $this->restMatchPath($reqPath, "/api/v1/operations/session/please");
             if($matchResult['matched']) {
@@ -259,6 +288,7 @@ class Application {
                     $apiResponse = $this->sessionManagerInterface->delSession($postData->sessionId);
                 }
             }
+            /*
             $matchResult = $this->restMatchPath($reqPath, "/api/v1/user/project/delete");
             if($matchResult['matched']) {
                 $this->addLog("POST: /api/v1/user/project/delete", "debug");
@@ -269,8 +299,24 @@ class Application {
                     $apiResponse = new ApiResponse(401, array('message' => 'This user does not have access to that project.'));
                 }
             }
+            */
             return $apiResponse->toJSON();
         }
+    }
+
+    function getProjectById($projectId) {
+        //fetch project from mongodb
+        $database = $this->getMongoDb();
+        $collection = $database->selectCollection('projects');
+        $cursor = $collection->findOne(['id' => intval($projectId)]);
+        if($cursor == null) { //empty result / not found
+            $this->addLog("Project ".$projectId." not found in database", "error");
+            return;
+        }
+
+        $project = json_decode(json_encode(iterator_to_array($cursor)), TRUE); //this is so dumb... but it works
+
+        return $project;
     }
 
     function fetchGitlabAccessToken() {
@@ -508,12 +554,12 @@ class Application {
     
     function handleUpload() {
         $this->addLog("handleUpload", "debug");
-        
+
         if(empty($_POST['fileMeta'])) {
             $date = date("Y-m-d H:i:s");
             mkdir("debug");
-            file_put_contents("debug/FILES-".$_SESSION['gitlabUser']->id."-".$date.".dump", print_r($_FILES, true));
-            file_put_contents("debug/POST-".$_SESSION['gitlabUser']->id."-".$date.".dump", print_r($_POST, true));
+            file_put_contents("debug/FILES-".$_SESSION['username']."-".$date.".dump", print_r($_FILES, true));
+            file_put_contents("debug/POST-".$_SESSION['username']."-".$date.".dump", print_r($_POST, true));
         }
 
         $fileMeta = json_decode($_POST['fileMeta']);
@@ -528,7 +574,7 @@ class Application {
         $this->addLog("Post-sanitization filename: ".$fileName, "debug");
         $this->addLog("Post-sanitization group name: ".$group, "debug");
 
-        $targetDir = "/tmp/uploads/".$_SESSION['gitlabUser']->id."/".$context."/".$group;
+        $targetDir = "/tmp/uploads/".$_SESSION['username']."/".$context."/".$group;
         $this->createDirectory($targetDir);
         move_uploaded_file($_FILES['fileData']['tmp_name'], $targetDir."/".$fileName);
 
@@ -605,7 +651,7 @@ class Application {
             }
             
             //Delete original zip file
-            unlink($archiveFile);
+            unlink($targetDir."/".$archiveFile);
         }
         else {
             //Failed
@@ -643,40 +689,6 @@ class Application {
             
             
         }
-    }
-
-    function handleUploadOld() {
-        $this->addLog("handleUpload", "debug");
-        $data = json_decode($_POST['data']);
-        $this->addLog("Received upload request of file with filename '".$data->filename."'");
-        $fileData = $data->file;
-        $fileName = $this->sanitize($data->filename);
-        //The 'group' is an arbitrary name which creates a grouping of files. For example the Documentation upload form component would define its own group for the files/docs uploaded through it, so that they can stay bundled in their own subdir
-        $group = $this->sanitize($data->group);
-
-        $this->addLog("Post-sanitization filename: ".$fileName, "debug");
-        $this->addLog("Post-sanitization group name: ".$group, "debug");
-
-        //file data looks like: data:audio/wav;base64,UklGRoQuFgBXQVZFZm10IBAAAAABAAEAgLsAAAB3AQACABAA
-        $pos = strpos($fileData, ";base64,");
-        $mime = substr($fileData, 5, $pos);
-        $this->addLog("Reported mime-type of file is: ".$mime, "debug");
-        $fileDataWithoutMime = substr($fileData, $pos+8);
-
-        $fileDataWithoutMime = str_replace(' ','+',$fileDataWithoutMime);
-        $fileBinary = base64_decode($fileDataWithoutMime, true);
-        $this->addLog("File size of ".$fileName." is ".strlen($fileBinary)." bytes", "debug");
-
-        $targetDir = "/tmp/uploads/".$_SESSION['gitlabUser']->id."/".$data->context."/".$group;
-
-        $this->addLog("File destination: ".$targetDir, "debug");
-        
-        $this->createDirectory($targetDir);
-
-        file_put_contents($targetDir."/".$fileName, $fileBinary);
-
-        $ar = new ApiResponse(200);
-        return $ar;
     }
 
     function createDirectory($targetDir) {
@@ -729,29 +741,29 @@ class Application {
             file_put_contents("/var/log/api/webapi.debug.log", date("Y-m-d H:i:s")." [".strtoupper($level)."] ".$msg."\n", FILE_APPEND);
         }
     }
+
+    function slugify($inputString) {
+        $inputString = strtolower(trim($inputString));
+        $replacements = array(
+            '@' => '_at_',
+            '.' => '_dot_',
+            ' ' => '_',
+        );
+    
+        return preg_replace_callback('/[@.\s]/', function ($match) use ($replacements) {
+            return $replacements[$match[0]];
+        }, $inputString);
+    }
     
     function getUserSessionAttributes() {
-
-        if(empty($_SESSION['gitlabUser'])) {
-            $this->getGitlabUser();
-        }
-
-        //If we don't have a PAT yet, fetch it now
-        if(empty($_SESSION['personalAccessToken'])) {
-            $response = $this->getPersonalAccessToken();
-            if($response->code == 200) {
-                $_SESSION['personalAccessToken'] = $response->body;
-            }
-        }
-
         $output = [
             'firstName' => $_SESSION['firstName'],
             'lastName' => $_SESSION['lastName'],
             'fullName' => $_SESSION['firstName']." ".$_SESSION['lastName'],
             'email' => $_SESSION['email'],
-            'username' => $this->getGitLabUsername($_SESSION['email']),
-            'id' => $_SESSION['gitlabUser']->id,
-            'personalAccessToken' => $_SESSION['personalAccessToken']
+            'username' => $this->slugify($_SESSION['email']),
+            'id' => $_SESSION['id'],
+            'eppn' => $_SESSION['eppn'],
         ];
     
         return new ApiResponse(200, $output);
@@ -871,15 +883,16 @@ class Application {
             return new ApiResponse(200, $_SESSION['personalAccessToken']);
         }
         
-        $res = $this->getPersonalAccessTokenFromStorage($_SESSION['gitlabUser']->id);
+        $res = $this->getPersonalAccessTokenFromStorage($_SESSION['id']);
         if($res !== false && !empty($res)) {
             $pat = $res->pat;
             return new ApiResponse(200, $pat);
         }
-        $ar = $this->createPersonalAccessToken();
+        //$ar = $this->createPersonalAccessToken();
         return $ar;
     }
 
+    /*
     function createPersonalAccessToken($overwriteIfExists = false) {
         global $gitlabAddress, $gitlabRootAccessToken;
         
@@ -916,6 +929,7 @@ class Application {
         return $ar;
     }
     
+    
     function getGitlabUser() {
         global $gitlabAddress, $gitlabRootAccessToken, $gitlabUser;
         //Gets User info from Gitlab for currently logged in user
@@ -948,7 +962,7 @@ class Application {
                     $response = $this->httpRequest("POST", $gitlabApiRequest);
                 }
                 
-                $_SESSION['id'] = $_SESSION['gitlabUser']->id;
+                //$_SESSION['id'] = $_SESSION['gitlabUser']->id;
                 $ar->body = $userList[0];
             }
         }
@@ -958,6 +972,7 @@ class Application {
     
         return $ar;
     }
+    */
     
     /**
      * Function: getGitlabUserProjects
@@ -1312,7 +1327,7 @@ class Application {
     }
 }
 
-$app = new Application();
+$app = new Application($domain);
 $routerOutput = $app->route();
 echo $routerOutput;
 
