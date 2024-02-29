@@ -761,7 +761,7 @@ class Application {
             'lastName' => $_SESSION['lastName'],
             'fullName' => $_SESSION['firstName']." ".$_SESSION['lastName'],
             'email' => $_SESSION['email'],
-            'username' => $this->slugify($_SESSION['email']),
+            'username' => $this->slugify($_SESSION['eppn']),
             'id' => $_SESSION['id'],
             'eppn' => $_SESSION['eppn'],
         ];
