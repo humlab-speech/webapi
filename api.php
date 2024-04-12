@@ -8,9 +8,12 @@ use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\ClientException;
 use MongoDB\Client;
 
+$domain = ($_SERVER['HTTP_HOST'] != 'visp.local') ? $_SERVER['HTTP_HOST'] : false;
+//if we are running on visp.local set cookie secure to false
+$secure = ($_SERVER['HTTP_HOST'] != 'visp.local') ? true : false;
+$httpOnly = false;
 
-$domain = getenv("HS_DOMAIN_NAME");
-session_set_cookie_params(60*60*8, "/", ".".$domain);
+session_set_cookie_params(60*60*8, "/", $domain, $secure, $httpOnly);
 session_start();
 
 $gitlabAddress = "http://gitlab:80";
