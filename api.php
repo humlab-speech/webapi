@@ -767,6 +767,7 @@ class Application {
             'username' => $this->slugify($_SESSION['eppn']),
             'id' => $_SESSION['id'],
             'eppn' => $_SESSION['eppn'],
+            'privileges' => $_SESSION['privileges'],
         ];
     
         return new ApiResponse(200, $output);
