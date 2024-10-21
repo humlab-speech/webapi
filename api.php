@@ -571,43 +571,65 @@ class Application {
         }
         return $foundProject;
     }
-    
+
     function handleUpload() {
         $this->addLog("handleUpload", "debug");
-
+    
+        // Log file meta data and $_FILES and $_POST if fileMeta is missing
         if(empty($_POST['fileMeta'])) {
             $date = date("Y-m-d H:i:s");
             mkdir("debug");
             file_put_contents("debug/FILES-".$_SESSION['username']."-".$date.".dump", print_r($_FILES, true));
             file_put_contents("debug/POST-".$_SESSION['username']."-".$date.".dump", print_r($_POST, true));
+            $this->addLog("Missing file metadata in POST request.", "error");
+            return new ApiResponse(400, "Missing file metadata");
         }
-
+    
+        // Decode fileMeta and sanitize inputs
         $fileMeta = json_decode($_POST['fileMeta']);
-        $fileName = $fileMeta->filename;
-        $group = $fileMeta->group;
-        $context = $fileMeta->context;
-
-        $fileName = $this->sanitize($fileName);
-        $group = $this->sanitize($group);
-
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $this->addLog("Invalid JSON in fileMeta: " . json_last_error_msg(), "error");
+            return new ApiResponse(400, "Invalid JSON in file metadata");
+        }
+        
+        $fileName = $this->sanitize($fileMeta->filename);
+        $group = $this->sanitize($fileMeta->group);
+        $context = $this->sanitize($fileMeta->context);
+    
         $this->addLog("Received upload file with filename '".$fileName."'");
         $this->addLog("Post-sanitization filename: ".$fileName, "debug");
         $this->addLog("Post-sanitization group name: ".$group, "debug");
-
+    
+        // Check if the uploaded file is in $_FILES and is valid
+        if (!isset($_FILES['fileData']) || $_FILES['fileData']['error'] !== UPLOAD_ERR_OK) {
+            $this->addLog("File upload error: " . $_FILES['fileData']['error'], "error");
+            return new ApiResponse(400, "File upload failed. Error code: " . $_FILES['fileData']['error']);
+        }
+    
         $targetDir = "/tmp/uploads/".$_SESSION['username']."/".$context."/".$group;
         $this->createDirectory($targetDir);
-        move_uploaded_file($_FILES['fileData']['tmp_name'], $targetDir."/".$fileName);
-
-        $this->addLog("File moved to dest: ".$targetDir."/".$fileName, "debug");
-
-        $this->addLog("File Type: ".$_FILES['fileData']['type'], "debug");
-        
-        if($_FILES['fileData']['type'] == "application/x-zip-compressed" || $_FILES['fileData']['type'] == "application/zip") {
+    
+        // Attempt to move the uploaded file and check if it succeeds
+        $targetFilePath = $targetDir . "/" . $fileName;
+        if (!move_uploaded_file($_FILES['fileData']['tmp_name'], $targetFilePath)) {
+            $this->addLog("Failed to move uploaded file to target directory: ".$targetFilePath, "error");
+            return new ApiResponse(500, "Failed to move uploaded file.");
+        }
+    
+        // Successfully moved file
+        $this->addLog("File successfully moved to: " . $targetFilePath, "info");
+    
+        // Log file type
+        $fileType = $_FILES['fileData']['type'];
+        $this->addLog("File Type: " . $fileType, "debug");
+    
+        // Handle specific file types (e.g., zip)
+        if ($fileType === "application/x-zip-compressed" || $fileType === "application/zip") {
             $this->handleZipArchive($fileName, $targetDir);
         }
-
-        $ar = new ApiResponse(200);
-        return $ar;
+    
+        // Return success response
+        return new ApiResponse(200, "File uploaded successfully.");
     }
 
     function rrmdir($dir) { 
