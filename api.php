@@ -108,14 +108,31 @@ class Application {
             }
         }
 
+        if(empty($_SESSION['loginAllowed'])) {
+            //if loginAllowed is not set, we need to fetch the complete session from the mongodb
+            $this->addLog("Session not found in PHP session, fetching from MongoDB", "debug");
+
+            $database = $this->getMongoDb();
+            $collection = $database->selectCollection('users');
+            $cursor = $collection->findOne(['phpSessionId' => session_id()]);
+            if($cursor == null) { //empty result / not found
+                $this->addLog("Session not found in database", "error");
+                $ar = new ApiResponse(401, "Session not found in database");
+                echo $ar->toJSON();
+                exit();
+            }
+
+            $this->addLog("Session found in database", "debug");
+            $session = json_decode(json_encode(iterator_to_array($cursor)), TRUE);
+            $_SESSION = $session;
+        }
+
         //AUTH CONTROL - ALL METHODS BEYOND THIS POINT REQUIRES THE USER TO BE SIGNED-IN
-        if(empty($_SESSION['authorized']) || $_SESSION['authorized'] !== true) {
+        if(empty($_SESSION['loginAllowed']) || $_SESSION['loginAllowed'] !== true) {
             //if user has not passed a valid authentication, don't allow access to this API
             $this->addLog("User not signed in - Authorization required");
             $this->addLog("cookies: ".print_r($_COOKIE, true), "debug");
-            $this->addLog("session_id: ".session_id(), "debug");
-            $this->addLog("session_id: ".session_id(), "debug");
-            $this->addLog("session_id: ".session_id(), "debug");
+            $this->addLog("session: ".print_r($_SESSION, true), "debug");
             $ar = new ApiResponse(401, "Authorization required");
             echo $ar->toJSON();
             exit();
