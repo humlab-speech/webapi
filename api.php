@@ -574,13 +574,41 @@ class Application {
 
     function handleUpload() {
         $this->addLog("handleUpload", "debug");
-    
+
+        // Check if a file was uploaded
+        if (!isset($_FILES['fileData'])) {
+            $this->addLog("No file uploaded.", "error");
+            return new ApiResponse(400, "No file uploaded.");
+        }
+
+        // Check for file upload errors
+        $error = $_FILES['fileData']['error'];
+        if ($error !== UPLOAD_ERR_OK) {
+            switch ($error) {
+                case UPLOAD_ERR_INI_SIZE:
+                    $message = "File exceeds the maximum upload size allowed by the server.";
+                    break;
+                case UPLOAD_ERR_FORM_SIZE:
+                    $message = "File exceeds the maximum size specified in the form.";
+                    break;
+                case UPLOAD_ERR_PARTIAL:
+                    $message = "File was only partially uploaded.";
+                    break;
+                case UPLOAD_ERR_NO_FILE:
+                    $message = "No file was uploaded.";
+                    break;
+                default:
+                    $message = "Unknown upload error (Code: $error).";
+            }
+            $this->addLog($message, "error");
+            return new ApiResponse(400, $message);
+        }
+
         // Log file meta data and $_FILES and $_POST if fileMeta is missing
         if(empty($_POST['fileMeta'])) {
             $date = date("Y-m-d H:i:s");
-            mkdir("debug");
-            file_put_contents("debug/FILES-".$_SESSION['username']."-".$date.".dump", print_r($_FILES, true));
-            file_put_contents("debug/POST-".$_SESSION['username']."-".$date.".dump", print_r($_POST, true));
+            file_put_contents("/var/log/api/debug/FILES-".$_SESSION['username']."-".$date.".dump", print_r($_FILES, true));
+            file_put_contents("/var/log/api/debug/POST-".$_SESSION['username']."-".$date.".dump", print_r($_POST, true));
             $this->addLog("Missing file metadata in POST request.", "error");
             return new ApiResponse(400, "Missing file metadata");
         }
@@ -631,6 +659,51 @@ class Application {
         // Return success response
         return new ApiResponse(200, "File uploaded successfully.");
     }
+    
+    function handleUploadNEW() {
+        $this->addLog("handleUpload", "debug");
+    
+        // Read raw input data for debugging
+        $rawData = file_get_contents("php://input");
+        file_put_contents(
+            "/var/log/api/debug/RAW-" . $_SESSION['username'] . "-" . date("Y-m-d_H-i-s") . ".dump",
+            $rawData
+        );
+    
+        // Decode metadata from POST
+        if (!empty($_POST['fileMeta'])) {
+            $fileMeta = json_decode($_POST['fileMeta'], true);
+        } else {
+            $this->addLog("Missing file metadata in POST request.", "error");
+            return new ApiResponse(400, "Missing file metadata");
+        }
+    
+        $fileName = $this->sanitize($fileMeta['filename']);
+        $group = $this->sanitize($fileMeta['group']);
+        $context = $this->sanitize($fileMeta['context']);
+    
+        $this->addLog("Received file with filename '" . $fileName . "'", "info");
+    
+        // Validate uploaded file
+        if (!isset($_FILES['fileData']) || $_FILES['fileData']['error'] !== UPLOAD_ERR_OK) {
+            $this->addLog("File upload error: " . $_FILES['fileData']['error'], "error");
+            return new ApiResponse(400, "File upload failed. Error code: " . $_FILES['fileData']['error']);
+        }
+    
+        $targetDir = "/tmp/uploads/".$_SESSION['username']."/".$context."/".$group;
+        $this->createDirectory($targetDir);
+    
+        $targetFilePath = $targetDir . "/" . $fileName;
+        if (!move_uploaded_file($_FILES['fileData']['tmp_name'], $targetFilePath)) {
+            $this->addLog("Failed to move uploaded file to target directory: ".$targetFilePath, "error");
+            return new ApiResponse(500, "Failed to move uploaded file.");
+        }
+    
+        $this->addLog("File successfully moved to: " . $targetFilePath, "info");
+    
+        return new ApiResponse(200, "File uploaded successfully.");
+    }
+    
 
     function rrmdir($dir) { 
         if (is_dir($dir)) { 
