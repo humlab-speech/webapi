@@ -16,11 +16,7 @@ $httpOnly = false;
 session_set_cookie_params(60*60*8, "/", $domain, $secure, $httpOnly);
 session_start();
 
-$gitlabAddress = "http://gitlab:80";
-$gitlabRootAccessToken = getenv("GIT_API_ACCESS_TOKEN");
 $hsApiAccessToken = getenv("HS_API_ACCESS_TOKEN");
-
-
 
 class Application {
     function __construct($domain) {
