@@ -8,9 +8,16 @@ use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\ClientException;
 use MongoDB\Client;
 
-$domain = ($_SERVER['HTTP_HOST'] != 'visp.local') ? $_SERVER['HTTP_HOST'] : false;
-//if we are running on visp.local set cookie secure to false
-$secure = ($_SERVER['HTTP_HOST'] != 'visp.local') ? true : false;
+// Set cookie domain based on HTTP_HOST
+// For visp.local domain, use .visp.local so cookies work across subdomains
+// For IP addresses or other hostnames, use false so cookies work for that specific host only
+if($_SERVER['HTTP_HOST'] == 'visp.local') {
+    $domain = ".visp.local";
+    $secure = false;
+} else {
+    $domain = false;  // Use false for IP addresses (127.0.0.1, etc) or other hostnames
+    $secure = true;
+}
 $httpOnly = false;
 
 session_set_cookie_params(60*60*8, "/", $domain, $secure, $httpOnly);
