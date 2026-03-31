@@ -874,12 +874,20 @@ class Application {
             $msg = serialize($msg);
         }
 
+        $formatted = date("Y-m-d H:i:s")." [".strtoupper($level)."] ".$msg."\n";
+
         if($level == "info" || $level == "error") {
-            file_put_contents("/var/log/api/webapi.log", date("Y-m-d H:i:s")." [".strtoupper($level)."] ".$msg."\n", FILE_APPEND);
-            file_put_contents("/var/log/api/webapi.debug.log", date("Y-m-d H:i:s")." [".strtoupper($level)."] ".$msg."\n", FILE_APPEND);
+            file_put_contents("/var/log/api/webapi.log", $formatted, FILE_APPEND);
+            file_put_contents("/var/log/api/webapi.debug.log", $formatted, FILE_APPEND);
         }
         if($level == "debug") {
-            file_put_contents("/var/log/api/webapi.debug.log", date("Y-m-d H:i:s")." [".strtoupper($level)."] ".$msg."\n", FILE_APPEND);
+            file_put_contents("/var/log/api/webapi.debug.log", $formatted, FILE_APPEND);
+        }
+
+        // Write errors to container stderr so they appear in journalctl
+        // (visible via: ./visp-podman.py logs apache)
+        if($level == "error") {
+            @file_put_contents("/dev/stderr", "[webapi] ".$formatted);
         }
     }
 
