@@ -1,4 +1,5 @@
 .vscode
-./vendor/
+vendor/
+composer.phar
 index.php-access.log
 webapi.code-workspace
