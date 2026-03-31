@@ -814,8 +814,28 @@ class Application {
 
     function createDirectory($targetDir) {
         if(!is_dir($targetDir)) {
+            // Check if the parent directory exists and is writable — gives a clear
+            // diagnostic when bind-mounted host directories have wrong permissions.
+            $parentDir = dirname($targetDir);
+            if(!is_dir($parentDir)) {
+                $this->addLog("Parent directory does not exist: ".$parentDir, "debug");
+            } elseif(!is_writable($parentDir)) {
+                $parentPerms = substr(sprintf('%o', fileperms($parentDir)), -4);
+                $parentOwner = fileowner($parentDir);
+                $processUser = posix_getpwuid(posix_geteuid());
+                $this->addLog(
+                    "Parent directory not writable: ".$parentDir.
+                    " (perms=".$parentPerms.", owner_uid=".$parentOwner.
+                    ", running as ".$processUser['name']." uid=".posix_geteuid().")",
+                    "error"
+                );
+            }
+
             $oldUmask = umask(0);
-            $mkdirResult = mkdir($targetDir, 0700, true);
+            // Use 0777 so both Apache (www-data) and session-manager (root in
+            // container) can read/write the upload tree.  The umask(0) above
+            // ensures the permission bits are applied as-is.
+            $mkdirResult = mkdir($targetDir, 0777, true);
             umask($oldUmask);
             if(!$mkdirResult) {
                 $processUser = posix_getpwuid(posix_geteuid());
