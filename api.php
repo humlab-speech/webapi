@@ -8,15 +8,18 @@ use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\ClientException;
 use MongoDB\Client;
 
-// Set cookie domain based on HTTP_HOST
-// For visp.local domain, use .visp.local so cookies work across subdomains
-// For IP addresses or other hostnames, use false so cookies work for that specific host only
-if($_SERVER['HTTP_HOST'] == 'visp.local') {
-    $domain = ".visp.local";
+// Set cookie domain based on HTTP_HOST so cookies work across subdomains
+// (e.g. BASE_DOMAIN, emu-webapp.BASE_DOMAIN, octra.BASE_DOMAIN)
+// For IP addresses, use false (no subdomain sharing possible)
+$host = $_SERVER['HTTP_HOST'];
+if(filter_var($host, FILTER_VALIDATE_IP)) {
+    $domain = false;  // IP address — no subdomain sharing
     $secure = false;
 } else {
-    $domain = false;  // Use false for IP addresses (127.0.0.1, etc) or other hostnames
-    $secure = true;
+    // Strip any port number, then prefix with dot for subdomain sharing
+    $domainPart = preg_replace('/:\d+$/', '', $host);
+    $domain = "." . $domainPart;
+    $secure = ($host !== 'visp.local');  // HTTPS everywhere except local dev
 }
 $httpOnly = false;
 
